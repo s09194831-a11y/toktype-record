@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ชุดอัดเสียง TokType</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: a recording script. Narrow column: how-to, who-you-are, set picker, numbered lines; a full-screen booth records one line at a time. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --ink: #16202b; --muted: #596574; --line: #dbe1e7;
+  --en-bg: #e2ecff; --en-ink: #1b4db5; --rec: #d63a2b; --done: #2c7a57; --done-bg: #e6f2eb;
+  --f-display: "Anuphan", "Leelawadee UI", "Tahoma", sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Leelawadee UI", "Tahoma", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #0f1419; --surface: #171e26; --ink: #e5eaf0; --muted: #97a3b0; --line: #2a333e;
+  --en-bg: #1c2b49; --en-ink: #a3c3ff; --rec: #ff6a5b; --done: #6fc79c; --done-bg: #17302a; color-scheme: dark } }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 760px; margin: 0 auto; padding-top: calc(28px + env(safe-area-inset-top, 0px)); padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px; }
+header { display: grid; gap: 6px; }
+.rec { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--f-mono); letter-spacing: .12em; color: var(--rec); }
+.rec::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); }
+h1 { font: 700 clamp(26px, 6vw, 36px)/1.25 var(--f-display); margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 60ch; }
+h2 { font: 600 18px/1.4 var(--f-display); margin: 0; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: grid; gap: 12px; }
+.card ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.card small { color: var(--muted); font-size: 14px; }
+.en { background: var(--en-bg); color: var(--en-ink); border-radius: 4px; padding: 0 3px; font-weight: 500; }
+
+label.field { display: grid; gap: 6px; font-weight: 500; }
+input[type="text"] { font: 400 17px/1.4 var(--f-body); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); width: 100%; max-width: 320px; }
+label.check { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; cursor: pointer; }
+label.check input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--rec); }
+
+.chips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.chip { font: 600 15px/1.2 var(--f-display); padding: 10px 4px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer; display: grid; gap: 2px; justify-items: center; }
+.chip span { font: 500 11px/1 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip[aria-pressed="true"] span { color: var(--bg); opacity: .75; }
+.chip:focus-visible, .btn:focus-visible, .row:focus-visible, input:focus-visible { outline: 3px solid var(--en-ink); outline-offset: 2px; }
+
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+.progress { font: 500 14px/1 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: 600 15px/1 var(--f-display); padding: 11px 16px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--rec); border-color: var(--rec); color: #fff; }
+.btn.go { background: var(--done); border-color: var(--done); color: #fff; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.note { font-size: 14px; color: var(--done); min-height: 1.2em; margin: 0; }
+.note.err { color: var(--rec); }
+
+ol.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 22px; gap: 12px; align-items: baseline;
+  padding: 12px 16px; border-top: 1px solid var(--line); cursor: pointer; }
+ol.list li:first-child .row { border-top: 0; }
+.num { font: 500 14px/1.6 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.txt { font-size: 18px; line-height: 1.65; overflow-wrap: anywhere; }
+.tick { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); align-self: center; display: grid; place-items: center; font-size: 13px; color: transparent; }
+.row.done { background: var(--done-bg); }
+.row.done .txt { color: var(--muted); }
+.row.done .tick { border-color: var(--done); background: var(--done); color: var(--surface); }
+
+.booth { position: fixed; inset: 0; background: var(--bg); z-index: 20; display: grid; grid-template-rows: auto 1fr auto;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.booth > * { max-width: 760px; width: 100%; margin: 0 auto; }
+.booth-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.booth-num { font: 500 clamp(28px, 8vw, 44px)/1 var(--f-mono); color: var(--rec); font-variant-numeric: tabular-nums; }
+.booth-mid { display: grid; align-content: center; gap: 16px; }
+.booth-txt { font: 500 clamp(26px, 6.5vw, 40px)/1.5 var(--f-body); text-wrap: pretty; overflow-wrap: anywhere; }
+.booth-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 40px; color: var(--muted); font-size: 15px; }
+.booth-status.live { color: var(--rec); font-weight: 600; }
+.meter { width: 120px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--rec); transition: width .08s linear; }
+.booth-nav { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; }
+.booth-nav .btn { padding: 18px 8px; font-size: 17px; }
+.recbtn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.recbtn::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: currentColor; }
+.recbtn.stop::before { border-radius: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  .booth-txt { animation: rise .18s ease-out; }
+  .recbtn.stop { animation: pulse 1.2s ease-in-out infinite; }
+}
+@keyframes rise { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--rec) 25%, transparent); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="rec">REC · TH + EN</span>
+    <h1>ชุดอัดเสียง TokType</h1>
+    <p class="lede">อ่านประโยคไทยที่มีคำอังกฤษปนแบบที่คนพูดกันจริง ชุดละ 100 ข้อ ใช้เวลาประมาณ 10–15 นาที เสียงที่อัดจะใช้ฝึกและทดสอบระบบพิมพ์ด้วยเสียง TokType</p>
+  </header>
+
+  <section class="card" aria-labelledby="how-h">
+    <h2 id="how-h">วิธีอัด</h2>
+    <ol>
+      <li>เปิดลิงก์นี้ใน Chrome หรือ Safari ถ้าเปิดจาก LINE แล้วกดอัดไม่ได้ ให้กดปุ่ม ⋯ มุมขวาบน แล้วเลือกเปิดในเบราว์เซอร์</li>
+      <li>หาที่เงียบ ปิดเพลง ปิดทีวี ถือมือถือห่างปากประมาณหนึ่งคืบ</li>
+      <li>กด <b>เริ่มอัด</b> แล้วกดปุ่มอัด อ่านประโยคบนจอ จบแล้วกดหยุด ระบบจะไปข้อต่อไปให้เอง</li>
+      <li>พูดเหมือนคุยกับเพื่อน คำที่มี<span class="en">แถบสี</span>เป็นคำอังกฤษ ให้ออกเสียงแบบที่พูดกันทุกวัน ไม่ต้องดัดสำเนียง</li>
+      <li>ถ้าอ่านผิดหรือสะดุด กด <b>ก่อนหน้า</b> แล้วอัดข้อนั้นใหม่</li>
+      <li>อัดครบแล้ว กด <b>ส่งไฟล์เสียง</b> เลือก LINE แล้วส่งให้คนที่ส่งลิงก์นี้มา</li>
+    </ol>
+    <small>เสียงเก็บอยู่ในเครื่องนี้เท่านั้นจนกว่าคุณจะกดส่งเอง ถ้าปิดหน้าไปแล้วเปิดใหม่ในเครื่องเดิมและเบราว์เซอร์เดิม เสียงที่อัดไว้ยังอยู่</small>
+  </section>
+
+  <section class="card" aria-labelledby="me-h">
+    <h2 id="me-h">ก่อนเริ่ม</h2>
+    <label class="field" for="nick">ชื่อเล่นของคุณ
+      <input type="text" id="nick" maxlength="30" autocomplete="nickname" placeholder="เช่น บีม">
+    </label>
+    <label class="check" for="consent"><input type="checkbox" id="consent">
+      <span>ฉันยินยอมให้ใช้เสียงที่อัดนี้ฝึกและทดสอบระบบพิมพ์ด้วยเสียง TokType</span></label>
+  </section>
+
+  <section style="display:grid;gap:10px" aria-labelledby="sets-h">
+    <h2 id="sets-h">ชุดของคุณ</h2>
+    <div class="chips" id="chips" role="group" aria-labelledby="sets-h"></div>
+  </section>
+
+  <section style="display:grid;gap:12px">
+    <div class="bar">
+      <span class="progress" id="progress"></span>
+      <div class="btns">
+        <button class="btn primary" id="startBtn" type="button">เริ่มอัด</button>
+        <button class="btn go" id="sendBtn" type="button">ส่งไฟล์เสียง</button>
+      </div>
+    </div>
+    <p class="note" id="note" aria-live="polite"></p>
+    <ol class="list" id="list"></ol>
+    <div class="bar">
+      <button class="linkbtn" id="saveBtn" type="button">บันทึกเป็นไฟล์ลงเครื่องแทนการแชร์</button>
+      <span><button class="linkbtn" id="wipeBtn" type="button">ลบเสียงชุดนี้ในเครื่อง</button>
+      <button class="linkbtn" id="wipeYes" type="button" hidden style="color:var(--rec)">กดอีกครั้งเพื่อลบจริง</button></span>
+    </div>
+  </section>
+</div>
+
+<div class="booth" id="booth" hidden role="dialog" aria-modal="true" aria-label="อัดเสียงทีละข้อ">
+  <div class="booth-top">
+    <span class="booth-num" id="bNum"></span>
+    <button class="btn" id="bClose" type="button">ปิด</button>
+  </div>
+  <div class="booth-mid">
+    <div class="booth-txt" id="bTxt"></div>
+    <div class="booth-status" id="bStatus" aria-live="polite"></div>
+  </div>
+  <div class="booth-nav">
+    <button class="btn" id="bPrev" type="button">ก่อนหน้า</button>
+    <button class="btn primary recbtn" id="bRec" type="button">อัด</button>
+    <button class="btn" id="bNext" type="button">ข้าม</button>
+  </div>
+</div>
+
+<script>
+const DATA = ["ส่ง LINE มาหน่อย", "IELTS ต้องได้อย่างน้อยหกคะแนนครึ่ง ถึงจะยื่นได้", "เข้า Discord หน่อย จะเล่น Roblox", "เปิด Bluetooth ให้หน่อย", "วันนี้ Shopee มี sale ลดเยอะ", "ลง story แล้วนะ", "ID card หายอีกแล้ว ต้องไปทำใหม่ที่ห้องธุรการ", "ใครเล่น ROV บ้าง", "มือถือแบตเหลือน้อย ขอยืม charger หน่อย", "เปิด Lazada ดูหน่อย มีของลดราคาเยอะเลย", "เดี๋ยว video call ไป", "คาบ English วันนี้ครูให้ท่องศัพท์ยี่สิบคำ", "เมื่อคืนผมเล่น ROV ตั้งแต่สี่ทุ่มยันตีสองเลยอะ", "Wi-Fi ที่บ้านช้ามาก เลยใช้ data มือถือแทน", "ขอ voucher ส่งฟรีด้วยนะครับ", "กด like ให้แล้วนะ", "ครูแนะแนวบอกว่าให้เตรียม backup หลายคณะ ไม่ต้องกลัวพลาด", "ติด rank ใน ROV มานานมากเลย ไม่ขึ้นสักที", "ช่วยกด update ให้หน่อยได้ไหมครับ", "กด code ลดก่อนจ่ายเงินนะ", "อย่าลืม tag เราด้วย", "schedule เทอมนี้แน่นมาก ไม่มีคาบว่างเลย", "ROV ซีซันใหม่ออกแล้ว มี skin เพียบเลยนะ", "ผมลืมรหัสเข้า login ของโรงเรียนอะ", "สแกน QR จ่ายได้เลยค่ะ", "ตอบ inbox หน่อยนะ", "กด share screen แล้วเลือกหน้าต่าง PowerPoint นะ", "ฝั่งตรงข้าม ban ตัวผมอีกแล้วอะ เซ็งมาก", "ส่ง link มาในกลุ่มเลยนะ", "โอนผ่าน PromptPay ได้ไหมครับ", "มา live กันเถอะ", "reading ข้อยาวๆ ทำไม่ทันเวลาตลอด", "เลือก hero ตัวไหนดี มือใหม่เล่นง่ายสุด", "รอ download แป๊บนึงนะครับ", "รอบนี้ได้ cashback สิบเปอร์เซ็นต์เลย", "ขอ follow กลับด้วยนะ", "วันนี้ physics ครูสอนเรื่องแรงเสียดทาน เข้าใจแล้วนะ", "ขอเล่นสาย tank หน่อยนะ ไม่อยากเป็นตัวหลัก", "ขอ screenshot หน้าจอนั้นหน่อย", "ของยังไม่มาถึงเลย ช่วยเช็ก tracking ให้หน่อยครับ", "ช่วย comment ใต้โพสต์หน่อย", "มายด์ ช่วยดู deadline งานกลุ่มให้หน่อย", "เมื่อวานตอนเลิกเรียนผมรีบกลับบ้านไปเล่น ROV กับเพื่อนในห้อง แต่เน็ตดันหลุดตอนกำลังจะชนะพอดีเลย", "ไฟล์ PDF อันนี้เปิดไม่ได้เลย", "ขอ refund ได้ไหมคะ เพราะของที่ได้มาผิดสี", "share ให้เพื่อนด้วยนะ", "ลืมแนบ file ตอนส่งงาน ทำไงดีอะ", "ลง Free Fire ใหม่แล้ว", "ลอง restart เครื่องดูก่อนไหม", "กด cancel ไม่ทันอะ ร้านส่งของออกไปแล้ว", "เปลี่ยน profile ใหม่แล้ว", "ขอ link Google Docs งานกลุ่มหน่อยค่ะ", "Free Fire อัปเดตแล้ว เปิดดูหน่อยสิ", "ต้นเล่นเกมจน battery เหลือสิบเปอร์เซ็นต์", "คืนนี้ Shopee มี flash sale แค่หนึ่งชั่วโมงนะ", "อัด clip ส่งมาดูหน่อย", "ตารางสอบ final ออกแล้วนะ ไปดูที่บอร์ด", "คืนนี้เล่น Free Fire เป็น squad ห้าคนกันนะ ใครว่างบ้างรีบบอกเลย ผมจะได้เปิดห้องรอ", "แม่คะ หนูขอเปลี่ยน setting ในมือถือหน่อย", "ใส่ coupon แล้วเหลือสองร้อยเก้าสิบบาทเอง", "ขอ location หน่อยครับ", "ฝึก writing ทุกวันจะเก่งขึ้นเอง", "ตัวละครนี้ถูก nerf ไปแล้ว ไม่เก่งเหมือนเดิม", "หน้าจอแตกแล้ว ต้องไปเปลี่ยน screen ใหม่", "สะสม point ครบแล้ว แลกของฟรีได้เลยนะ", "รอแป๊บนะ on the way แล้ว", "ทำ flashcard ท่องศัพท์ในมือถือ ระหว่างรอรถ", "เล่น PUBG กันไหมคืนนี้", "notification เด้งทั้งวันเลย รำคาญมาก", "แม่ใช้ให้ไปซื้อน้ำปลาที่ 7-Eleven หน้าปากซอย", "ขอโทษนะ เราจะ late นิดนึง", "ตัวหนังสือเล็กไป เพิ่ม font ให้ใหญ่ขึ้นหน่อย", "เมื่อวานเล่น PUBG แล้วโดนยิงตายตั้งแต่ลงเครื่องเลย", "ช่วย install app นี้ให้หน่อยได้ไหมคะ", "เติมเงินที่ 7-Eleven ได้ตลอดยี่สิบสี่ชั่วโมงเลย", "คืนนี้ free ไหม", "ถ้าตัวหนังสือในสไลด์เยอะเกินไป คนดูจะไม่อ่านนะ ลองใช้รูปกับ icon แทนข้อความยาวๆ จะดีกว่า", "ชวนเพื่อนเข้า lobby PUBG หน่อย ผมรออยู่", "ไฟล์งานอยู่ใน folder ชื่อโครงงานนะ", "ร้านนี้ส่ง delivery ฟรีถ้าซื้อครบห้าร้อยบาท", "พรุ่งนี้ busy มากเลย", "กีฬาสีปีนี้ฉันอยู่ทีม cheer ซ้อมแทบทุกวันเลย", "ปืนกระบอกนี้ยิง headshot ยากมากเลยครับ", "copy ข้อความนี้แล้ว paste ตรงนี้เลย", "ค่าส่งแพงไปหน่อย รอ free shipping ดีกว่า", "OK ได้เลยครับ", "ครูให้ไปแข่ง debate ภาษาอังกฤษ ตื่นเต้นสุดๆ", "Valorant เปิดห้องหรือยัง", "อย่าลืม save งานก่อนปิดเครื่องนะ", "ตัวนี้ size เล็กไปหน่อย มีใหญ่กว่านี้ไหมคะ", "ไปกิน buffet กันไหม", "camp ลูกเสือปีนี้สนุกมาก ได้นอนเต็นท์ด้วย", "คืนนี้ไล่ rank Valorant กันนะ ห้ามหลับ", "บีมส่งรายงานทาง email แล้วหรือยัง", "อ่าน review ก่อนซื้อดีกว่านะ", "วันนี้ mood ไม่ดีเลย", "ขอ link Zoom หน่อย", "เลือก agent ตัวไหนดีครับ มือใหม่เล่นยากไหม", "ผมสมัคร Gmail ใหม่เพราะอันเก่าเต็ม", "ร้านนี้ rating สี่จุดเก้าเลย ซื้อได้สบายใจ", "ตลกมากอะ lol", "อย่าลืมตั้งค่า share ให้ทุกคนแก้ไขได้ด้วยนะ", "เล่น Valorant ต้องใช้ mic คุยกันตลอดเกมเลยนะ ถ้าเงียบเกินไปเพื่อนในทีมจะไม่รู้ว่าเราจะไปทางไหน", "อัปโหลดรูปงานกลุ่มขึ้น Google Drive ให้แล้วนะ", "ผมรอ rider อยู่หน้าบ้านครับ", "อยากนอน chill ที่บ้าน", "เปิด notification Classroom ไว้ จะได้ไม่พลาดงาน", "ซื้อ skin ปืนใน Valorant ไปแล้ว ราคาแพงมาก", "Chrome ค้างอีกแล้ว ปิดไม่ได้เลย", "สั่ง LINE MAN มาสองกล่องแล้วนะ", "happy birthday นะเพื่อน", "ครูบอกว่าตอนสอบ final ให้เอาบัตรประจำตัวกับปากกามาสองด้าม ห้ามเอามือถือเข้าห้องสอบเด็ดขาดนะ", "แม่ถามว่าทำไมนั่งหน้าจอทั้งวัน ผมเลยบอกว่ากำลังซ้อมเล่น Valorant เพื่อไปแข่งงานโรงเรียนเดือนหน้า", "Windows ขึ้นว่ามี update ใหม่ ให้กดตอนนี้เลยไหม", "promotion ใหม่ออกแล้ว รีบเข้าไปดูก่อนหมดนะ", "ส่ง screenshot มาให้ดูหน่อย", "ส่งชื่อเข้า competition วิทยาศาสตร์ให้ทันก่อนวันศุกร์นะ", "Genshin ตัวใหม่ออกวันนี้ ผมต้องหมุน gacha ให้ได้", "เพื่อนผมเพิ่งซื้อ iPhone กล้องสวยมากเลย", "ขอ discount หน่อยได้ไหมคะ ซื้อหลายชิ้น", "Wi-Fi ที่บ้านช้ามากเลย", "record คาบเรียนไว้ให้ด้วยนะครับ เผื่อมาไม่ทัน", "ดวงแย่มาก หมุน gacha ไปร้อยครั้งยังไม่ได้ตัวที่อยากได้เลย", "มือถือ Android ของพ่อใช้ง่ายกว่าเยอะ", "ตอนนี้ Lazada ลดราคาหนักมากเลย", "แบตจะหมดแล้ว หา charger ก่อน", "อัด video ส่งครูแทนการ present สดก็ได้นะ", "Genshin มี event ใหม่ แจกของฟรีเยอะเลยนะ", "Samsung รุ่นนี้จอใหญ่ดี แต่ราคาแรงไปหน่อย", "ไม่ต้องไปห้างหรอก ผมสั่ง online ไปแล้ว", "ขอยืม power bank หน่อยได้ไหม", "ใส่ uniform ผิดวัน โดนครูฝ่ายปกครองเรียกเลย", "ทำ daily quest เสร็จหรือยังอะ", "ลองถาม AI ดูสิ เดี๋ยวก็รู้คำตอบ", "ขอ receipt ด้วยนะครับ จะเอาไปเบิก", "ตรงนี้ไม่มี signal เลยอะ", "ตอนไป field trip ครูให้แบ่งกลุ่มสัมภาษณ์คนในชุมชน แล้วกลับมาสรุปเป็น report ส่งในคาบหน้า", "ผม main ตัวนี้มาตลอดเลยนะ อย่าให้เปลี่ยน", "ผมใช้ ChatGPT ช่วยทำการบ้านวิทยาศาสตร์", "ใช้ credit card ผ่อนศูนย์เปอร์เซ็นต์ได้นะคะ", "นัดกันที่ cafe นะ", "ทำ mind map สรุปบทเรียนก่อนสอบ จำง่ายขึ้นเยอะเลย", "ว่างแล้วเข้า Genshin นะ", "เขียน prompt ยังไงให้มันตอบตรงประเด็น", "เปิดไลฟ์ขายของ ลูกค้า comment กันรัวเลย", "เจอกันหน้า mall ครับ", "mock exam เมื่อวานยากมาก ทำไม่ทันครึ่งนึง", "เข้า Roblox ได้ยัง ผมรออยู่ในเกมแล้วนะ", "code ตรงนี้ error ตลอดเลย แก้ไม่ถูกสักที", "ฝากซื้อน้ำส้มที่ 7-Eleven ให้หน่อย", "เดี๋ยวเรียก Grab ไปรับ", "คาบ science วันนี้มี lab ด้วยนะ ใส่เสื้อกาวน์มาด้วย", "น้องชายผมเล่น Roblox ทั้งวันเลย แม่บ่นใหญ่", "เริ่มเรียน Python ตั้งแต่ปิดเทอมที่แล้ว", "สั่งของ Shopee ไปห้าชิ้น มาแค่สามชิ้นอะ", "ดู Netflix กันไหม", "laptop เก่ามาก เปิดช้าสุดๆ", "ใน Roblox มีเกมสร้างบ้านสนุกมากเลยค่ะ", "website ของโรงเรียนเข้าไม่ได้ ลอง refresh แล้วก็ไม่ติด", "QR นี้สแกนไม่ติดเลยครับ ลองใหม่อีกที", "เปิด playlist ใหม่ฟังกัน", "ทำ pre-test ก่อนเรียน แล้วทำ post-test ตอนจบบทนะ", "ผมสร้าง avatar ใน Roblox ให้หน้าเหมือนตัวเองเลย", "server ล่มอีกแล้ว เกมเลยเข้าไม่ได้ ต้องรอแอดมินแก้ก่อนถึงจะเล่นต่อได้", "ขอ latte ร้อนแก้วหนึ่งค่ะ", "ปิด notification หน่อยนะ", "lab วันพฤหัสนะ", "แม่ให้เล่น Roblox แค่ชั่วโมงเดียวต่อวัน ผมเลยต้องรีบเก็บเงินในเกมให้ได้เยอะที่สุด", "รูปทั้งหมดเก็บไว้บน cloud แล้ว ไม่ต้องกลัวหายนะ", "ผมเอา Americano เย็น ไม่หวานครับ", "mute กลุ่มนี้ไว้ก่อนนะ", "ขอดู PowerPoint ก่อนส่งหน่อยนะ เผื่อมีที่ต้องแก้", "สร้างบ้านใน Minecraft เสร็จแล้วนะ มาดูสิ", "ขอสมัคร account ใหม่ให้หน่อยครับ", "วันนี้อยากกิน matcha เย็น ๆ จัง", "อย่า block เราน้า", "ได้ score เท่าไหร่ ขอดูหน่อย", "ชวนเพื่อนเข้า server Minecraft ของผมได้เลย", "ก่อนล้างเครื่องต้อง backup ข้อมูลทุกอย่างไว้ก่อนนะ ไม่งั้นรูปกับงานหายหมด", "ขอดู menu หน่อยค่ะ", "เมื่อกี้ unfollow ไปแล้วนะ", "บีมเป็น leader ส่วนต้นทำ slide นะ", "โดน creeper ระเบิดบ้านพังหมดเลย เสียดายมาก ใช้เวลาสร้างตั้งสองวันแท้ ๆ", "printer ในห้องคอมกระดาษหมดอะ", "เสาร์นี้ไปกิน buffet กันไหม", "ดู reel นี้หน่อย ตลกมาก", "เมื่อคืนนอนไม่พอ focus ในห้องสอบไม่ได้เลย", "วันนี้ลง mod ใหม่ให้เกมด้วย สนุกขึ้นเยอะ", "mouse ไร้สายของผมแบตหมดพอดี", "ชวนเพื่อนไปกิน shabu ร้านใหม่กัน", "เจอ meme ตลกมาก", "คาบสี่ English นะ", "ใครอยากเล่น survival ใน Minecraft บ้างครับ", "keyboard ปุ่มนี้กดแล้วไม่ติดเลย", "ร้านนี้ pizza หน้าชีสอร่อยมาก", "ขี้เกียจพิมพ์ ส่ง voice มาเลย", "พี่ที่ติดแพทย์บอกว่าต้องเริ่มติว TCAS ตั้งแต่ขึ้นมัธยมปลายใหม่ๆ", "เล่น Minecraft กันไหม", "เสียบ USB เข้าช่องด้านหลังนะครับ", "สั่ง cappuccino ร้อนหนึ่งแก้วกับครัวซองต์หนึ่งชิ้น", "ขอ DM หน่อยได้ไหม", "essay หัวข้อนี้ต้องเขียนอย่างน้อยสามร้อยคำ", "พรุ่งนี้ว่างไหม ไปขุดแร่ใน Minecraft กับผมหน่อย เดี๋ยวผมเตรียมอาหารไว้ให้ในกระเป๋าเลย", "mic ไม่ดัง พูดแล้วไม่มีเสียงเลย", "เพิ่ม topping ไข่มุกได้ไหมคะ", "ช่วย reply หน่อยครับ", "ตัดต่อ clip ด้วย CapCut เสร็จแล้ว เหลือแค่ใส่เสียงกับซับไตเติ้ลอีกนิดเดียว", "boss ตัวนี้ยากมาก", "headphone ข้างซ้ายไม่มีเสียงอะ", "ขอ takeaway แก้วนี้ด้วยค่ะ", "ดึก ๆ ค่อย chat นะ", "เรื่อง tense ยังงงอยู่เลยอะ", "อยากได้ item หายากจาก boss ตัวนี้มากเลย", "speaker ตัวนี้ดังมาก ลดหน่อยนะ", "ร้านนี้ steak นุ่มมาก ราคาก็ไม่แพงด้วย", "อยู่ online ไหม", "score วิชาเลขออกแล้ว ฉันได้ไม่ถึงครึ่งอะ", "เน็ต lag อีกแล้ว", "ใช้ voice typing พูดแทนพิมพ์เร็วดีนะ", "ผมชอบกิน sushi ตอนเย็นวันศุกร์", "ตอนนี้ offline อยู่นะ", "MC ในงานกีฬาสีพูดตลกมาก ขำจนปวดท้อง", "ping สูงมากเลย", "ตอนนี้ Wi-Fi ใช้ได้แล้วนะ ลอง connect ดู", "มื้อเที่ยงวันนี้ขอ salad ผักสดจานเล็กพอ", "good night นะทุกคน", "Word เด้งปิดเอง งานหายหมดเลย", "เน็ตบ้านอ่อนมาก ping ขึ้นไปสามร้อยเลย", "ผมเปิด hotspot ให้ใช้ก่อนนะ", "วันอาทิตย์ไป brunch กับแม่ที่คาเฟ่ใหม่นะ", "good morning ค่ะ", "ต้องสอบ TGAT กับ A-Level ใช่ไหม", "ตัวละครผมวาร์ปไปมาเพราะ lag แย่มาก", "เน็ตหมดแล้ว ขอใช้ data ของเธอหน่อย", "ขอ cake ชิ้นนี้ห่อกลับบ้านด้วยครับ", "see you พรุ่งนี้นะ", "สอบ make-up ได้เมื่อไหร่ ขอไปถามครูก่อน", "ต่อ Wi-Fi ไม่ติด เลยเข้าเกมไม่ได้เลย", "signal ที่นี่ไม่มีเลย โทรไม่ออก", "smoothie มะม่วงแก้วนี้หวานพอดีเลย", "bye ก่อนนะ แม่เรียกแล้ว", "ค่ะ หนูยื่น portfolio ผ่านระบบไปแล้วเมื่อเช้านี้", "server ล่มอีกแล้ว", "router ที่บ้านต้องปิดแล้วเปิดใหม่", "คาเฟ่นี้มี Wi-Fi เร็ว นั่งทำงานได้สบาย", "ขอ add friend หน่อยนะ", "ปีนี้สีฟ้าของเราได้ที่หนึ่งในกองเชียร์ ทุกคนซ้อม cheer มาเกือบเดือน ดีใจมากจนร้องไห้เลย", "server ไทยเต็มหรือเปล่า เข้าไม่ได้เลยอะ ลองเปลี่ยนไปเล่นฝั่งสิงคโปร์แล้วก็ยังโหลดไม่ขึ้นเหมือนกัน", "ลืมเอา power bank มาด้วยอะ", "ต้องรอ queue นานไหมคะ", "เสาร์นี้ว่างไหม ไปเดินเล่นที่ mall กัน", "ใครเป็น leader อะ", "ช่วยเช็ก ping ให้หน่อยว่าเท่าไหร่", "แอป YouTube โหลดช้ามาก ภาพกระตุกด้วย", "ขอ espresso ช็อตเดียวแก้วเล็กครับ", "เดี๋ยวพี่สร้าง group ให้ทุกคนจะได้คุยกันง่าย ๆ", "ต้องมี reference ท้ายรายงานด้วยนะ ครูย้ำแล้ว", "เกม crash บ่อยมาก ต้อง restart ใหม่ทุกที", "มายด์ชอบดู video ใน TikTok ก่อนนอน", "มื้อเที่ยงวันนี้ขอ set ไก่ทอดแล้วกัน", "วันนี้ลง post ใหม่ใน Facebook ด้วยนะ ไปกด like หน่อย", "ทัศนศึกษาต้องรวมตัวหน้าโรงเรียนตอนเจ็ดโมง ขึ้น bus ให้ทัน", "เจอ bug เยอะจริง ๆ ตัวละครลอยอยู่กลางอากาศเลย", "ช่วยแชร์ post นี้ลง Facebook หน่อย", "ขอ mocha เย็นปั่น หวานน้อยหนึ่งแก้ว", "พี่ชายเพิ่งเปิด TikTok ได้ไม่กี่วัน follower ก็เป็นพันแล้ว", "sorry ค่ะครู หนูมาสายเพราะรถติดมาก", "patch ใหม่ออกแล้ว", "ลง story ใน Instagram แล้วนะ ไปดูสิ", "ทุกโต๊ะได้ free ชาเย็นหนึ่งแก้วเลยนะ", "เมื่อคืนดู live ของพี่คนนั้นสนุกมากเลย", "เอา certificate ไปใส่ในแฟ้มสะสมผลงานด้วยนะ", "รอ update ก่อนดีกว่านะ เกมยังมีบั๊กอยู่", "ทักมาทาง Line ได้เลยนะครับ", "กิน pizza กับเพื่อนแล้วหารกันนะ", "ช่วยคิด caption ให้หน่อยสิ คิดไม่ออกเลย", "ขอยืม calculator หน่อยครับ", "login ไม่ได้เลย ต้องรอ server กลับมาก่อน", "เข้า Zoom ตอนแปดโมงเช้านะ อย่าลืมเปิด mic ด้วย", "ช่วยแนะนำ menu ที่ขายดีหน่อยค่ะ", "รูปนี้ใส่ filter ไหนสวยกว่ากัน", "volunteer ครบสิบชั่วโมงแล้ว ได้ใบรับรองด้วย", "level สูงสุดแล้วเหรอ", "ครูสั่งงานใน Google Classroom อีกแล้ว", "ผมแพ้นมวัว เปลี่ยนเป็น oat milk ได้ไหมครับ", "แต่งรูปเสร็จแล้ว เดี๋ยวลง Instagram ให้", "ถ้าอยากเก่ง ต้องจด notes ตอนครูสอน ไม่ใช่ถ่ายรูปอย่างเดียว", "ผมอัป level ตัวละครไม่ทันเลย ต้องใช้ของเยอะมาก", "ตารางใน Excel นี้สูตรผิดหรือเปล่า", "ขอ extra shot เพิ่มอีกหนึ่งช็อตครับ", "เพื่อนในห้องส่ง hashtag มาให้ใช้ตอนโพสต์รูปงานโรงเรียน", "ครูเพิ่งโพสต์ assignment ใหม่ใน Google Classroom เมื่อกี้", "item นี้หายากมาก", "พิมพ์รายงานใน Word แล้วอย่าลืม save นะ", "ไปกินข้าวที่ food court ในห้างกัน", "คลิปนี้ viral แล้วนะ คนแชร์เป็นหมื่นเลย", "portfolio ยังไม่เสร็จเลย", "ขอ skin สวย ๆ หน่อย", "ทำสไลด์ใน PowerPoint เสร็จตั้งแต่เมื่อคืน", "ร้านนี้มี delivery ไปส่งถึงที่ทำงานด้วย", "เพลงนี้ trending ใน TikTok ทั้งโรงเรียนเลยอะ", "ไปทัศนศึกษากลับมาแล้วต้องทำ report ส่งครูอีก", "ตอนนี้ rank อะไรแล้ว", "เปิด Canva ทำโปสเตอร์ส่งครูหน่อยสิ", "ฉันอยากลอง cheese tart ร้านนั้นจังเลย", "ไปเต้น challenge กันที่สนามหลังเลิกเรียน", "ทำ portfolio ต้องเลือกผลงานที่ดีที่สุด ไม่เกินสิบหน้านะ", "เกมนี้ต้อง farm ของนานมากเลยครับ", "Netflix เรื่องนี้สนุกมาก ดูต่อด้วยกันไหม", "ขอเปลี่ยน topping เป็นบุกได้ไหมคะ ตอนนี้กำลังคุมน้ำหนัก", "วันเกิดแม่อาทิตย์หน้า ซื้อ gift อะไรดีนะ", "เมื่อวานทำ quiz ผ่านมือถือ ได้เต็มยี่สิบเลย", "ขอ grind เลเวลก่อนนะ แล้วค่อยไปเล่นด้วย", "เปิด Spotify ฟังเพลงระหว่างทำการบ้านเถอะ", "ชาบูร้านนี้น้ำซุปอร่อย แต่ buffet ราคาแพงไปหน่อยนะ", "เราจะทำ surprise ให้แม่ตอนเช้า อย่าเพิ่งบอกนะ", "เพื่อนในกลุ่มไม่ยอมช่วยทำ project เลย เหนื่อยมาก", "ท่า ult ตัวนี้แรงมาก ใช้ให้ถูกจังหวะนะ", "Roblox ตัวใหม่เล่นแล้วเครื่องร้อนมาก", "ซื้อ steak มากินที่บ้านดีกว่า ไม่ต้องรอคิวนาน", "สั่ง cake ไว้แล้ว เดี๋ยวไปรับตอนเย็น", "vocabulary เยอะมากเลย", "กด respawn ได้ยังอะ ผมตายไปแล้ว", "Minecraft ลง mod ไม่ได้เพราะ version ไม่ตรง", "จอง hotel ใกล้ BTS ดีกว่า", "พ่อชอบถ่าย selfie กับแมวทุกวันเลย", "ได้เลยค่ะ เดี๋ยวหนูส่งให้ทาง email นะคะ", "ช่วย carry หน่อยนะ ผมยังเล่นไม่เก่ง", "laptop เครื่องนี้พัดลมดังมากเลยครับ", "ทำ booking ไว้เรียบร้อยแล้วครับ", "ยายหัดใช้ LINE ได้แล้ว ส่ง sticker มาให้ทุกเช้า", "grade เทอมนี้ออกวันไหน ใครรู้บ้าง", "เพื่อนผมเป็น pro player ตัวจริงเลยนะ", "tablet ของน้องเอาไว้ดูการ์ตูนอย่างเดียว", "ถึงโรงแรมแล้ว ขอ check-in ได้เลยไหมคะ", "น้องสาวนั่งเล่น iPhone ทั้งวันเลย", "group work ครั้งนี้ ครูให้เลือกหัวข้อเองได้นะ", "มือใหม่แบบผมเรียกว่า noob ใช่ไหมครับ", "ผมอยากได้ iPad ไว้จดโน้ตตอนเรียน", "พรุ่งนี้ต้อง check-out ก่อนเที่ยงนะ", "แม่ถามว่าถึงบ้านหรือยัง ตอบใน LINE เร็ว ๆ นะ", "เพื่อนส่ง comment มาให้แก้สามจุดในรายงาน", "ตัวนี้โดน buff แล้วเหรอ แรงขึ้นเยอะเลย", "ขอยืม cable หน่อยได้ไหม ของผมขาด", "นั่ง MRT ไปสะดวกกว่า รถติดมากเลย", "บอกแม่ว่าเดี๋ยว video call กลับไปหาตอนสามทุ่ม", "ตั้ง alarm ไว้ตีห้าแล้วยังตื่นไม่ไหวเลย", "เมื่อกี้ได้ ace ครั้งแรกในชีวิตเลย", "ช่องเสียบ Type-C หลวมจนชาร์จไม่เข้า", "BTS ขบวนนี้คนแน่นมากเลย", "ที่บ้านมี group ของญาติทุกคน คุยกันทั้งวันเลย", "ปิด mic ตอนไม่ได้พูดด้วยนะครับ", "รอบนี้ clutch ได้เฉียดฉิวเลยอะ", "เปิด dark mode ถนอมสายตาตอนกลางคืนนะ", "เรียก taxi หน่อย ฝนตกหนักมาก", "คุณป้าชอบ share ข่าวในกลุ่มตลอดเลย", "ขอ summary grammar บทนี้หน่อยครับ", "gg ทุกคนนะครับ", "ปรับ brightness ลงหน่อย แสบตามาก", "เรียก Grab ไปสนามบินดีกว่า", "ตาแอบ react รูปหลานทุกรูปเลยนะ", "คืนนี้ต้องนั่งทำ report ทั้งคืนเลย เพราะลืมว่า deadline คือเช้าพรุ่งนี้ และยังไม่ได้เริ่มเลยสักหน้า", "ซื้อ headset ใหม่ เสียงชัดมากเลย", "volume ดังเกินไปแล้ว เดี๋ยวแม่ได้ยิน", "flight เที่ยวเช้า delay ไปสองชั่วโมงอะ", "ห้ามลืมตั้ง close friends ตอนลง story นะ ไม่งั้นทุกคนเห็นหมด", "มี tutor มาสอนเลขที่บ้านทุกวันเสาร์", "จอ monitor ใหม่ลื่นมาก เล่นเกมฟินสุด ๆ", "กด mute ก่อนครับ เสียงก้องเลย", "อย่าลืมเอา passport ไปด้วยนะลูก", "อยากให้เพื่อนเห็นรูปนี้ แต่ไม่อยากให้ครูเห็น เลยตั้ง private", "thanks ที่ช่วยติวให้นะ", "เล่น PlayStation กับเพื่อนที่บ้านสนุกกว่าเยอะ", "เปลี่ยน wallpaper เป็นรูปแมวของมายด์", "ซื้อ ticket รถไฟไว้แล้วนะ", "ตอนนี้บัญชีเราตั้งเป็น public ใครก็เข้ามาดูได้", "เสร็จแล้วส่ง draft มาให้ดูก่อนนะ", "พ่อเพิ่งซื้อ Nintendo Switch ให้ผมเมื่อวาน", "เปิด airplane mode ไว้ตอนอยู่บนเครื่องบิน", "ไปรอที่ gate ได้เลยครับ", "ลืมรหัส account เลยเข้า Instagram ไม่ได้", "คลิปย้อนหลังดูใน YouTube ได้ ครูอัปโหลดไว้แล้ว", "เล่น Mario Kart กับน้องทีไรแพ้ทุกรอบเลย", "ตั้ง ringtone ใหม่เป็นเพลงที่ชอบ", "ครอบครัวเราไปพักที่ resort ริมทะเลครับ", "ต้อง update แอปก่อนถึงจะส่ง sticker ใหม่ได้", "สอบ midterm วันไหนนะ", "ใครถือ controller อยู่ ส่งมาให้ผมเล่นบ้าง", "มือถือปิด silent ไว้ เลยไม่ได้ยินสายเลย", "ปีใหม่นี้ไปพัก homestay บนเขากันไหม", "ส่งคลิปมาเลย เดี๋ยวช่วย edit ให้", "TOEIC กับ IELTS อะไรง่ายกว่ากันนะ", "ถ้าอยากไต่ rank ให้ได้ ต้องฝึกเล่นหลายตัวและฟังคำสั่งของหัวหน้า team ด้วยนะ อย่าเอาแต่เล่นคนเดียว", "เปิด flash ถ่ายรูปในที่มืดหน่อยสิ", "โรงแรมนี้ breakfast อร่อยมากเลย", "เมื่อกี้ delete โพสต์ไปแล้ว อายอะ", "อย่า copy จากเน็ตตรงๆ ครูจับได้ทุกที", "เข้า voice ใน Discord หน่อย พี่รออยู่", "แอป camera เปิดไม่ติดเลย ภาพดำสนิท", "ขอ late check-out ได้ไหมครับ", "พิมพ์ผิดอะ ขอ edit ข้อความก่อนนะ", "หาข้อมูลจาก Wikipedia ก่อน แล้วค่อยเปิดแหล่งอ้างอิงตามอีกที", "ผมสร้างกลุ่ม Discord ให้ team เราแล้วนะ ใครอยากเข้ามาคุยกันก็บอกได้เลย จะส่ง invite ให้", "ถ่ายด้วย filter ตัวนี้แล้วหน้าสวยขึ้นเยอะ", "ต้องจ่าย deposit ก่อนไหมคะ", "ช่วย forward รูปนี้ให้เพื่อนอีกคนหน่อย", "ใช้ Canva ทำ poster หน้าปกก็สวยแล้ว", "ใครอยู่ใน Discord บ้าง ขอเสียงหน่อยครับ", "ส่ง sticker น่ารักมาให้หน่อย", "ไปสนามบินด้วย Airport Rail Link ก็ได้นะ", "เม้นไปแล้วแต่เขาไม่ reply เลย", "Drive เต็มแล้ว ต้องลบไฟล์เก่าออกก่อน", "mute mic ด้วยนะ เสียงรบกวนเยอะมาก", "ขำมาก เมื่อกี้เห็น meme ในกลุ่มไหม", "ซื้อ ticket ผ่านแอปแล้วสแกน QR เข้าได้เลย", "เขา mention ชื่อเราในโพสต์ด้วยล่ะ", "ใครเก่ง Canva ช่วยทำโลโก้ให้หน่อยครับ", "มีใครอยากเล่น duo กับผมไหม", "คลิปนี้ viral ไปทั่วโรงเรียนแล้ว", "เติมเงินบัตร Rabbit ที่สถานี BTS", "มีคนส่ง friend request มาเยอะมาก ไม่รู้จักสักคน", "report เล่มนี้ต้องมีสารบัญกับเลขหน้าด้วยนะคะ", "เล่น solo ตอนดึกเจอแต่คนเก่งทั้งนั้นเลย", "subscribe ช่องนี้ไว้ด้วยนะครับ", "พาไป tour รอบเมืองเก่าครึ่งวัน", "เสาร์อาทิตย์นี้มี plan อะไรหรือยัง", "อยากเข้าคณะวิศวะ ต้องมี GPA กับ portfolio ดีๆ ด้วย", "สู้ solo ไม่ไหวแล้ว", "สร้าง playlist ใหม่ไว้ฟังตอนวิ่งนะ", "หาร้านอาหารแถวนี้ใน Google Maps หน่อย", "ยังไม่มี plan เลย ไปไหนก็ได้", "ทำ infographic ใน Canva เรื่องการแยกขยะ ต้องส่งก่อนคาบสุดท้ายของวันศุกร์", "ผมเล่น support ให้ team นะ ไม่ต้องห่วง", "ตอนนี้ buffering นานมาก ดูไม่ได้เลย", "กระเป๋า luggage ใบนี้หนักมากเลย", "ไปเที่ยวทะเลกัน เดี๋ยวสร้าง group ถามทุกคนก่อน", "Kahoot ในคาบวิทย์สนุกมาก ฉันได้ที่หนึ่ง", "อย่า AFK นะ team ต้องการเธอ", "หน้าจอ loading ค้างอยู่ตั้งนานแล้ว", "มีโปร package ทัวร์ภูเก็ตสามวันสองคืน", "จองที่พักได้แล้ว เดี๋ยวส่ง location ใน Messenger ให้", "ครูบอกให้ส่งเป็น PDF นะ ห้ามส่งเป็นรูป", "ผม AFK แป๊บนึงนะ", "เครื่อง hang กลางคัน งานหายหมดเลย", "ที่พักนี้ได้ rating ดีมากเลย", "ไม่ต้องรอ taxi หรอก เดี๋ยวพ่อขับไปส่ง", "ได้ grade เท่าไหร่", "เมื่อกี้ AFK ไปกินข้าว กลับมาแพ้แล้วอะ", "แอปนี้ crash ทุกครั้งที่กดเปิด", "ต้องจอง seat รถทัวร์ล่วงหน้านะ", "นั่ง BTS ไปลงสยามแล้วเดินต่อก็ได้", "อยากให้ทุกคนเปิด Google Docs ไฟล์เดียวกัน แล้วพิมพ์ส่วนของตัวเองลงไปพร้อมกัน จะได้ไม่ต้องรอกัน", "ขอโทษนะ แบตหมดเลย disconnect ไปเลย", "เกมนี้มี bug เยอะจนเล่นไม่สนุก", "ถึงสนามบินแล้ว ต่อ Wi-Fi ได้ที่ไหนบ้าง", "ลง MRT สถานีสุดท้าย แล้วโทรหาเลยนะ", "ใกล้สอบแล้ว มี stress จนนอนไม่หลับเลย", "team เรายังขาดอีกคน", "อยากลอง reset เครื่องใหม่หมดเลย", "นั่ง BTS ไปลงสยามแล้วต่อ MRT", "หลงทางอะ ช่วยเปิด map ให้หน่อย", "พรุ่งนี้ต้องส่ง homework วิชาฟิสิกส์ อย่าลืมนะ", "คืนนี้ผม stream เกมตอนสองทุ่มนะครับ", "ถ้า format แฟลชไดรฟ์ ข้อมูลหายหมดนะ", "ช่วงนี้ไป gym ทุกเย็นเลย", "รถติดมากเลย น่าจะ late ประมาณครึ่งชั่วโมง", "เมื่อวานลืมกด submit เลยโดนศูนย์คะแนน", "เปิด stream แล้วนะ", "กด delete ไฟล์เก่าทิ้งไปเลย", "วันนี้ workout หนักมาก ขาสั่นเลย", "sorry ที่มาช้านะ รถติดมากจริง ๆ", "ใช้ breakout room แบ่งกลุ่มคุยกันนะครับ", "มา live กับพี่ตอนเย็นนี้นะคะ", "rename ไฟล์ให้เป็นชื่อจริงก่อนส่งครู", "ผมกำลังคุม diet อยู่ครับ", "เดี๋ยวไปถึงแล้วจะ call หานะ", "เปิด camera ด้วยนะ ครูจะเช็กชื่อ", "กำลังตั้งค่า OBS สำหรับ stream อยู่", "สร้าง shortcut ไว้บนหน้าจอเลยจะได้เร็ว", "ดื่ม protein หลังเล่นเสร็จทุกวัน", "โทรไปแล้วไม่รับ เห็นมี miss call เต็มเลย", "ไม่เข้าใจโจทย์ข้อนี้เลย ช่วยอธิบาย step ให้หน่อย", "chat ในไลฟ์วิ่งเร็วมาก อ่านไม่ทันเลย", "กด Ctrl ค้างไว้แล้วเลื่อนล้อ mouse เพื่อซูมได้", "แม่ให้กิน vitamin ซีทุกเช้า", "วันเสาร์นี้วันเกิดต้น มางาน party ที่บ้านนะ", "ตื่นเต้นมากเลย ใกล้ถึงคิว present แล้ว", "ขอบคุณที่กด follow ช่องนะครับ", "พิมพ์เสร็จแล้วกด Enter ได้เลยครับ", "นัดหมอที่ clinic เด็กวันพฤหัสบ่ายสอง", "มายด์ส่งคำอวยพร happy birthday มาตั้งแต่เที่ยงคืนเลย", "เช็ก plagiarism ก่อนส่งด้วยนะ ครูซีเรียส", "ใครดู stream ผมอยู่ ช่วยพิมพ์ทักทายหน่อย", "กด Shift ค้างไว้แล้วคลิกหลายไฟล์", "มี appointment กับหมอฟันวันเสาร์ครับ", "เดี๋ยวเป่าเค้กแล้ว live ให้ดูนะ", "A-Level เลขยากกว่าที่คิดเยอะ", "คลิปนี้ได้ยอด view เป็นหมื่นแล้วนะ", "ใช้ search หาไฟล์ในเครื่องก็ได้นะ", "ขอเลื่อน appointment ไปวันจันทร์ได้ไหมคะ", "บีมอัด video คำอวยพรจากทุกคนไว้ทำ surprise ให้แม่", "เห็น message ของครูแล้ว เดี๋ยวตอบกลับนะคะ", "ช่วยกด like กับ share ให้หน่อยนะ", "เปิด Google Maps หาร้านใกล้ที่สุดหน่อย", "มี fever ตั้งแต่เมื่อคืน ตัวร้อนมากเลย", "งานเลี้ยงสนุกมาก เดี๋ยวส่ง photo ใน group ให้", "ขอดู portfolio ของพี่ปีที่แล้วเป็นตัวอย่างหน่อยค่ะ", "กด subscribe ด้วยนะคะ", "GPS ในมือถือไม่แม่น พาไปผิดทาง", "ตอนนี้เป็น flu ไอแล้วก็คัดจมูกด้วย", "ถ่ายรูปรวมใบสุดท้ายก่อน เดี๋ยว upload ลง album", "ขอ feedback หน่อยครับ", "ถ้าชอบคลิปนี้ อย่าลืมกด subscribe กับกดกระดิ่งด้วยนะครับ", "สแกน QR code จ่ายเงินที่ร้านข้าวมันไก่", "แพ้อาหารทะเลค่ะ เป็น allergy มาตั้งแต่เด็ก", "ช่วงนี้ stress มากเลยอะ สอบใกล้แล้ว", "จัดหน้าผิด margin ต้องแก้ใหม่ทั้งเล่ม", "ตัดต่อ clip เสร็จแล้ว", "scan เอกสารส่งครูผ่านมือถือได้นะ", "ไปตรวจ checkup ประจำปีที่โรงพยาบาลวันพุธ", "วันนี้รู้สึก happy มากที่ได้เจอทุกคน", "พรุ่งนี้ต้อง present งานหน้าห้องแล้วนะ", "ผมอัด clip ตอนสู้ boss ไว้ เดี๋ยวส่งให้ดู", "อัปโหลดไฟล์เสร็จแล้ว เดี๋ยว share link ให้", "trainer บอกให้ทำ cardio ก่อนยกเวท", "bored ทั้งวันเลย ไม่รู้จะทำอะไร", "ฉันทำ PowerPoint ไปแล้วสิบหน้า เหลือแค่สรุป", "ตัดต่อ highlight เกมของทีมเราใช้เวลาสามชั่วโมง", "เผลอคลิก pop-up ผิด เครื่องเลยมีโฆษณาเด้งเต็มจอ", "วิ่ง treadmill สามสิบนาที เหนื่อยมากเลย", "วันนี้ sad นิดหน่อย ขอคุยด้วยหน่อยได้ไหม", "ซ้อม presentation อีกรอบก่อนเข้าห้องดีไหม", "thumbnail ปกคลิปอันนี้เท่ดี ใครทำให้", "เปิดหลาย tab เกินไปเครื่องเลยอืด", "เช้านี้เล่น yoga กับแม่ที่สวน", "ดีใจมากที่ได้เป็น fan ตัวจริง", "ซ้อม interview กับครูแนะแนวทุกวันศุกร์", "ผมอยากทำช่อง YouTube เกมของตัวเองบ้าง", "ลาก window นี้ไปไว้อีกจอหน่อย", "นับ calorie ทุกมื้อเลยเหรอ เหนื่อยจัง", "เพื่อนคนนี้ cute มากเลยอะ", "backup ไฟล์งานไว้สองที่ด้วยนะ กันหาย", "ช่อง YouTube นี้มีคนตามสองแสนแล้วนะ", "ใช้ browser อะไรอยู่ Chrome หรือ Edge", "ช่วงนี้กินแต่ clean food ผักกับไก่ต้ม", "ตื่นเต้นจังเลย พรุ่งนี้จะได้ไปดู concert", "เมื่อวานครูสั่ง homework ห้าข้อ แต่ฉันลืมจดเลยไม่รู้ว่าต้องส่งวันไหน ใครพอจำได้บ้างบอกหน่อยนะ", "เปิด YouTube ดูวิธีผ่านด่านนี้ก่อนดีกว่า", "ลองล้าง cache ในเครื่องดูนะ", "ลอง fasting สิบหกชั่วโมง หิวมาก", "ticket คอนเสิร์ตหมดไวมากเลย แย่งกันเป็นพัน", "อยากเรียน international program แต่ค่าเทอมแพงมากเลย", "ดู YouTube จนลืมนอน", "พื้นที่ storage เต็มแล้ว ถ่ายรูปไม่ได้เลย ต้องลบคลิปเก่าออกก่อนสักครึ่งนึง", "ปวดหลังมาก ไปทำ massage ดีกว่า", "วันนี้ไม่ค่อยมี vibe เลยอะ", "ครูเปิด Quizizz ให้เล่นก่อนสอบ", "พากย์ไทยใน TikTok ตลกมากเลย", "memory เต็มตลอดเลย ต้องลบแอปทิ้งบ้าง", "นอนไม่พอ ตอนนี้ burnout สุด ๆ", "ร้านนี้ vibe ดีมาก เหมาะกับถ่ายรูป", "งานชิ้นนี้ส่งเป็น Word หรือ PDF ก็ได้ค่ะ", "comment ใต้คลิปตลกมาก อ่านแล้วขำไม่หยุดจนต้องเอามือถือไปซ่อน กลัวพ่อเห็น", "เครื่องผมมี RAM แค่แปดกิกะเอง", "ต้องใส่ mask เวลาไปโรงพยาบาลนะ", "ไปนั่ง relax ที่ร้านกาแฟกันไหม", "ตอนทำข้อสอบอย่าลืมเช็ก answer sheet ว่าฝนวงกลมครบไหม", "ผมดู vlog ของพี่คนนี้ทุกวันเลย", "เปลี่ยนมาใช้ SSD แล้วเปิดเครื่องไวขึ้นมาก", "เป้าหมายคือลด fat ไม่ใช่แค่ลดน้ำหนัก", "fighting นะ สอบให้ผ่านเลย", "homework คาบสามยังไม่ได้ทำเลย", "คลิปนี้เป็น meme ไปทั่วโรงเรียนแล้ว", "วันนี้เล่น game กับเพื่อนในห้องไหม", "พรุ่งนี้มี meeting ตอนเก้าโมงครึ่ง", "ขอบคุณที่ให้กำลังใจนะ love you เลย", "เมื่อกี้ Meet หลุดไหม", "ทำ challenge นี้ไหม เห็นเด็ก ๆ ทำกันทั่ว", "ต้น stream เกมให้เพื่อนดูทุกคืนวันศุกร์", "ส่ง email ให้ลูกค้าหรือยังครับ", "คิดถึงจังเลย miss you นะ", "แบ่งงานกันให้ชัดๆ ไม่งั้น project ไม่เสร็จแน่", "เปิดเพลงใน Spotify ให้หน่อยครับ", "กำลัง live อยู่นะ ใครอยากดูก็เข้ามา", "ผมกำลังเขียน report ส่งหัวหน้า", "ฮาจนปวดท้องเลย ส่ง clip นั้นมาอีกทีหน่อย", "ตั้ง group chat ใน Line ไว้แล้ว เดี๋ยวแอดให้", "ฟัง Spotify ตอนเดินทาง", "กด like ให้เพื่อนหน่อย", "deadline งานนี้คือวันศุกร์นะ", "joke ที่แกเล่าเมื่อวาน ตอนนี้ยังขำไม่หายเลย", "วันนี้ทำ speaking กับครูต่างชาติ ตื่นเต้นมาก", "เพลงนี้ใส่ playlist ด้วย", "อ่าน comment แล้วขำจนหยุดไม่ได้", "วันนี้ต้องทำ OT อีกแล้ว", "อย่า prank แรงนะ เดี๋ยวมีคนตกใจ", "พี่ที่เรียนมหาลัยแนะนำว่าทำ portfolio ไม่ต้องใส่ทุกอย่าง เลือกเฉพาะที่เล่าเรื่องของเราได้ดีที่สุดพอ", "playlist ใหม่ของผมมีแต่เพลงเศร้า", "กด follow ไว้แล้วนะ ตามกลับด้วย", "boss ให้กลับบ้านเร็ว เพราะงานเสร็จแล้ว", "มุกนี้เก่าแล้วนะ เจอใน TikTok มาหลายรอบแล้ว", "โอเคครับ เดี๋ยวส่ง file ให้ทางไลน์", "ผมทำ playlist ไว้ฟังตอนวิ่งตอนเช้า", "ขอ chat หาหน่อยนะ มีเรื่องจะถาม", "office ใหม่อยู่ชั้นสิบสองครับ", "ตั้ง status ใหม่ว่ากำลังยุ่งอยู่ ใครทักมาจะได้เข้าใจ", "รอบนี้ final แล้วนะ", "เพลงนี้ติดหูมาก เปิด repeat ทั้งวันเลย", "มี message เข้ามาหลายอัน ยังไม่ได้อ่านเลย", "ขอ reply ด่วนหน่อยนะครับ ลูกค้ารออยู่", "ช่วยคิด bio ใหม่ให้หน่อยสิ คิดไม่ออก", "OK ตกลงตามนั้นนะ เจอกันหน้าห้องสมุดตอนพักเที่ยง", "เพลง K-pop เพราะมาก", "ตรวจ inbox หน่อยว่าครูตอบกลับมาหรือยัง", "เดี๋ยวฉันส่ง file ให้ทาง email นะ", "วิดีโอยาวไป ตัดเป็น reel สั้น ๆ ดีกว่า", "ใช้ highlight สีเหลืองขีดจุดสำคัญในหนังสือ", "วง K-pop วงนี้ comeback แล้วนะ รอมานานมาก", "เมลนี้เข้า spam ไปเลยไม่เห็นเลย", "ตั้ง Zoom ประชุมตอนบ่ายสามนะคะ", "เปิด YouTube ดู vlog เที่ยวเกาหลีมา", "เรียน coding คาบคอมสนุกดี เขียนเกมเองได้ด้วย", "ตอนนี้ฟังแต่เพลง K-pop ทุกวัน จนแม่ถามว่าฟังรู้เรื่องเหรอ", "แนบ attachment ไฟล์รายงานไปด้วยนะครับ", "ลิงก์ Google Meet เข้าไม่ได้เลย ใครมีอีกอันไหม", "ช่อง YouTube ของเพื่อนมี subscriber ครบพันแล้ว", "admission รอบนี้ใช้คะแนน IELTS ด้วยไหม", "ปล่อย MV แล้วนะ", "ช่อง subject ต้องเขียนว่าอะไรดีคะ", "ทำ presentation ให้เสร็จก่อนเที่ยงพรุ่งนี้", "อย่าลืมกด subscribe แล้วเปิดกระดิ่งด้วยนะ", "ครูให้ทำ test เก็บคะแนนทุกวันศุกร์", "teaser ของอัลบั้มใหม่ออกแล้ว ใจเต้นแรงมาก", "กด reply ตอบครูไปเลยนะ", "ปีนี้ KPI ของทีมสูงมากเลยนะ", "ช่วยส่งลิงก์ channel ให้หน่อย", "เรานัดกันทำ project ที่ห้องสมุดวันเสาร์ แต่มีสองคนติดเรียนพิเศษ เลยต้องเลื่อนไปเป็นวันอาทิตย์", "ซื้อ album มาเก็บ ได้ photocard ด้วยนะ", "มี template ใบสมัครให้โหลดฟรีที่ไหนไหม", "client ขอแก้งานอีกรอบแล้ว", "ใน live มี sale เยอะมาก ไปดูด่วน", "ข้อนี้วาด graph ยังไงนะ ใครช่วยสอนหน่อย", "light stick ของวงนี้สวยมาก อยากได้สักอัน", "ครูให้ทำ slide ห้าหน้าส่งวันจันทร์", "เสนอ proposal ให้บริษัทใหม่วันจันทร์", "สั่งของจาก Shopee มาหลายอย่างแล้ว", "ใครมี template รายงานสวยๆ บ้างไหม", "ไป fan meeting ครั้งแรก ตื่นเต้นสุด ๆ เตรียมของขวัญกับการ์ดเขียนมือไปให้ศิลปินตั้งแต่เมื่อคืน", "เปิด Google Docs แล้วแชร์ให้ทั้งกลุ่ม", "งานนี้เป็น project ใหญ่เลยนะ", "โหลดแอป Discord ไว้คุยตอนเล่นเกมด้วย", "เมื่อเช้า Zoom ล่มกลางคาบ ครูเลยให้อ่านเองจาก PDF แล้วส่งสรุปใน Classroom ก่อนห้าโมงเย็น", "จองบัตร concert ได้ยัง", "ทำตารางคำนวณคะแนนใน Sheets ง่ายกว่าที่คิดนะ", "ขอ WFH วันศุกร์ได้ไหมครับ", "เล่น game ด้วยกันไหมคืนนี้", "ส่ง assignment ยัง", "บัตร concert ขายหมดในห้านาทีเลยอะ ไม่ทันเลย", "ประชุมกันใน Google Meet ตอนทุ่มนึงนะ", "ขอ leave หนึ่งวันวันศุกร์ได้ไหมคะ", "เปิด Zoom เรียนพิเศษตอนสองทุ่มนะ", "ไป scan เอกสารที่ห้องสมุดกัน", "ผมกับเพื่อนสามคนรวมเงินกันซื้อบัตร concert ของวง K-pop ที่ชอบ ตั้งแต่เปิดจองเมื่อเช้าแต่ก็กดไม่ทันอยู่ดี", "ครูใช้ Microsoft Teams ส่งการบ้านทุกวัน", "เงินเดือนออกวันสิ้นเดือน มี bonus ด้วยนะ", "ทำไม Google Meet ค้างอีกแล้วเนี่ย", "ตอนเลือกอันดับสมัคร อย่าลืมเผื่อ plan B ด้วยนะ", "นักร้องคนนี้ cover เพลงเก่าได้เพราะมาก", "ระบบส่ง OTP มาที่เบอร์ผมไม่เข้าสักที รอมาสิบนาทีแล้ว", "กะดึกวันนี้ ต้องเข้า shift สี่ทุ่ม", "เสียงไม่ได้ยินเลย ลอง mute แล้ว unmute ดู", "ใช้ Excel ทำตารางสถิติ ง่ายกว่าเขียนมือเยอะเลย", "ผมซ้อม cover dance กับเพื่อนทุกวันหลังเลิกเรียน", "กรอก username ผิดตัวนึง เลยเข้าไม่ได้", "printer เครื่องนี้กระดาษติดอีกแล้ว", "กล้องเสียอยู่ เลยเปิด camera ไม่ได้", "แอป Duolingo เตือนทุกวัน ช่วยให้ท่องศัพท์ต่อเนื่อง", "เสียงร้อง live ของวงนี้ดีกว่าในเพลงอีก", "กด verify ตัวตนผ่านอีเมลที่ส่งไปแล้ว", "ฝากทำ summary ประชุมให้ผมหน่อยครับ", "ลืมเสียบ charger ไว้ โทรศัพท์ดับกลางคลิปเลย", "Zoom ตัดทุกสี่สิบนาที ต้องเข้าใหม่ตลอด", "เปิด podcast ฟังตอนนั่งรถไปโรงเรียน", "ตั้ง pin ล็อกหน้าจอไว้ด้วยนะ กันคนอื่นแอบดู", "รบกวน approve ไฟล์นี้ให้ด้วยนะคะ", "download แอปใหม่ไม่ขึ้นเลยอะ", "ตอนพูดอย่าอ่านจาก slide ตรงๆ นะ", "ช่วงสอบฟังเพลง lo-fi แล้วอ่านหนังสือได้ดีมาก", "ลง antivirus ไว้ด้วยนะ กันไวรัสในแฟลชไดรฟ์", "ลืมแนบ attachment ในอีเมล ขอโทษครับ", "ระวังโปรไฟล์ปลอมนะ ตอนนี้มี scam เยอะมาก", "ครูให้เขียน essay เรื่องวันหยุดที่ผ่านมา", "ไปร้อง karaoke กันไหม วันเสาร์นี้", "ระวัง scam ที่ส่ง link ปลอมมาทางข้อความ", "พรุ่งนี้ทีมเราต้อง present งานให้ผู้บริหาร", "เดี๋ยวพ่อจะ call มาตอนเที่ยง อย่าลืมรับสายนะ", "ผลสอบ TGAT ออกเมื่อไหร่ครับ", "ตั้ง volume เบา ๆ นะ คนอื่นกำลังนอน", "ข้อความนี้เป็น phishing ชัดเลย อย่ากดนะ", "ประชุมเลื่อนเป็นบ่ายสอง ช่วยแจ้งใน group ด้วย", "พี่สาวส่งรูปหลานมาใน group ครอบครัว น่ารักมาก", "ข้อสอบ listening ฟังเร็วมากจนจับไม่ทัน", "ศิลปินคนโปรดจะมา tour เมืองไทยแล้ว ผมต้องเก็บเงินค่าขนมให้ได้ภายในสองเดือนเลยนะ", "ถาม Gemini ดูบ้างสิ บางทีมันอาจตอบได้ดีกว่า ChatGPT นะ", "ใคร free ตอนบ่ายบ้างครับ มาช่วยกันหน่อย", "คุณยายถามว่าทำไมไม่ตอบ LINE สักที", "ขอโทษนะครับครู ผมส่ง assignment ช้าไปหนึ่งวัน เพราะที่บ้านไฟดับ ผมยอมโดนหักคะแนนได้ครับ", "เพลงนี้ติดอันดับ chart หนึ่งแล้วนะ", "ผมลอง Copilot เขียนโค้ดแล้ว เร็วมากเลย", "วันนี้ลูกค้า cancel นัดกะทันหันเลย", "เดี๋ยวพาน้องไปดู movie ที่ห้าง", "TCAS เครียดมากเลย แต่ต้องสู้ต่อ", "คืนนี้ดู Netflix กันไหม", "ให้ AI สรุปบทเรียนให้ แล้วเราอ่านตามอีกที", "เช้านี้ login เข้าระบบไม่ได้เลย", "จองตั๋ว online ไว้แล้ว ไม่ต้องรอคิว", "อย่าใส่ animation เยอะ มันดูรกนะ", "series เรื่องนี้สนุกมาก", "ใช้ chatbot ฝึกคุยภาษาอังกฤษกับมันได้นะ", "password หมดอายุ ต้องตั้งใหม่ทุกเดือน", "ทำ content ลง TikTok ทุกวันเลยนะ ไม่เหนื่อยเหรอ", "พรุ่งนี้มี quiz นะ", "คืนนี้มี series ใหม่ลง Netflix พอดีเลย", "สั่งให้ AI วาด image ตามที่เราพิมพ์", "เดือนนี้ sales ทำได้ตามเป้าแล้วนะ", "เราไม่ค่อยได้เล่น Facebook แล้ว ตอนนี้เล่นแต่ IG", "homework เยอะมากเลยวันนี้", "ดู series จบทั้งซีซันภายในวันเดียว", "ใช้ Google Translate แปลประโยคนี้ให้หน่อย", "วันนี้ต้องสั่งอาหารไก่เพิ่ม ช่วยทัก Messenger ร้านให้หน่อย", "ตามไปดูใน IG ได้เลย เดี๋ยวเราลงรูปทริปให้", "TCAS ปีนี้มีกี่รอบนะ ใครรู้บ้าง", "พอเปิด Netflix ดู series ปุ๊บ ก็ลืมเวลาเลย รู้ตัวอีกทีก็ตีสามแล้ว พรุ่งนี้ต้องตื่นไปเรียนแต่เช้าอีก", "ถาม Siri ว่าพรุ่งนี้ฝนจะตกไหม", "อาหารไก่เหลือไม่ถึงสามกระสอบแล้ว ตั้ง reminder ให้สั่งเพิ่มด้วย", "เพื่อนส่ง link ร้านอร่อยมาให้ ไปลองกันนะ", "เปิด Zoom แล้วนะ", "Netflix มีหนัง horror เพียบเลย แต่ผมกลัวนอนไม่หลับ", "ผมให้ ChatGPT ช่วยตรวจ grammar", "เช็ก stock อาหารไก่ก่อนวันอาทิตย์นะลูก", "ขอ ID LINE หน่อยได้ไหมครับ", "อ่านหนังสือทั้งคืน เดี๋ยวสอบเสร็จจะ chill ให้เต็มที่", "ดู trailer ยังครับ", "AI บอกคำตอบผิด เราต้องเช็กเองด้วยนะ", "stock ไข่ในตู้เย็นหมดแล้ว ต้องรีบเก็บ", "สแกน QR code นี้เพื่อเข้ากลุ่มได้เลย", "ทำ report ไม่ทันแล้ว", "ดู trailer แล้วอยากไปดูในโรงเลย", "ฝึกเขียน prompt ให้ละเอียดขึ้นจะได้ผลดีกว่า", "ลูกค้าสั่งไข่ order ใหญ่สามร้อยฟอง", "เปิด hotspot ให้หน่อยสิ เน็ตเราหมดแล้ว", "เขียน lab report ส่งภายในอาทิตย์หน้า", "trailer ตัวล่าสุดมีคนดูเป็นล้านแล้ว", "ตั้งชื่อ variable ให้ฟังแล้วเข้าใจง่ายนะ", "ป้าโทรมาขอ order ไข่เพิ่มอีกสองแผง", "เน็ต lag มากเลย รอ loading นานมาก", "ผมอยากสมัครสายวิทย์ แต่ GPA เทอมนี้ต่ำกว่าที่ตั้งเป้าไว้ เลยกำลังคิดว่าควรไปติว chemistry เพิ่มดีไหม", "หนังเรื่องนี้ได้ rating ดีมากเลยนะ", "รัน command นี้ใน terminal แล้วรอเลย", "พรุ่งนี้เช้าต้องไปส่งไข่ให้ร้านค้า เปิด GPS นำทางให้หน่อย", "ไปตั้งค่าใน setting แล้วปิดเสียงแจ้งเตือนได้", "ซ้อม cheer ทุกเย็นหลังเลิกเรียน เหนื่อยมาก", "ขอ review หน่อยครับ", "เก็บ code ไว้บน GitHub จะได้ไม่หาย", "รถ delivery ไข่ออกตอนหกโมงเช้านะ", "ขอ scroll ดู TikTok อีกแป๊บนึงนะ แล้วจะนอน", "abstract ต้องมีทั้งภาษาไทยและภาษาอังกฤษนะ", "อ่าน review แล้วคนบอกว่าตอนจบเซอร์ไพรส์มาก", "เขียนเว็บด้วย HTML กับ JavaScript สนุกดี", "ไข่ไซส์ใหญ่เหลือน้อย โพสต์ขายใน Facebook ก่อนดีไหม", "หน้า feed วันนี้มีแต่รูปงานวันเกิดของเพื่อน", "ใส่เลข page ที่มุมขวาล่างนะ", "ก่อนจะจ่ายเงินซื้อเกม ลองดู review ใน YouTube ก่อนนะ เพราะบางเกมสวยแค่ในรูป แต่เล่นจริงเฉย ๆ มาก", "โปรแกรม Scratch เหมาะกับคนเริ่มเขียนโค้ด", "จัดไข่สิบแผงให้ลูกค้าร้านอาหาร แล้วถ่ายรูป slip โอนเงินเก็บไว้ด้วย", "เปิดเพลงใน Spotify ให้ทุกคนฟังกันหน่อย", "ต้อง login เข้าระบบโรงเรียนก่อนถึงจะดูคะแนนได้", "anime เรื่องนี้ภาพสวยจนอึ้งเลย", "loop นี้วนไม่รู้จบ เครื่องเลยค้าง", "ชั่งไข่แยกเบอร์เสร็จแล้ว ลงยอดใน Google Sheets ให้ด้วยนะ", "เราใช้ Android เลยดู sticker ของ iPhone ไม่ได้", "upload ไม่ขึ้นอะ", "ผมชอบ anime เรื่องนี้", "ลองใช้ API ของเว็บอากาศดูสิ", "ตั้ง timer เปิดไฟโรงเรือนตีสี่ครึ่ง", "ส่งเป็น GIF ก็ได้นะ ตลกดี", "ใช้ ChatGPT ช่วยหาไอเดียได้ แต่ต้องเขียนเองนะ", "ผมเริ่มดู anime ตั้งแต่อยู่ประถม", "ผมรัน Python แล้วขึ้น syntax error", "พัดลมโรงเรือนเสียตัวหนึ่ง พ่อสั่งตัวใหม่ใน Shopee แล้ว", "ไปกิน pizza กันไหม เดี๋ยวเราเลี้ยง", "TCAS รอบแรกเปิดแล้ว", "ดู anime แบบพากย์ไทยหรือ sub ดีนะ", "แก้ bug ไปสามชั่วโมงแล้วยังไม่เจอ", "ฉีด vaccine ให้ไก่ทุกสามเดือน", "วันนี้ MK ลดราคา ไปกันเถอะ", "ชอบ chemistry มาก แต่ biology ท่องเยอะไปหน่อย", "subtitle ภาษาไทยของเรื่องนี้แปลตลกมาก", "อัปเดต version ใหม่แล้วโปรแกรมใช้ได้ปกติ", "พ่อติด camera ดูไก่ผ่านมือถือได้", "เดี๋ยวสั่ง delivery มากินที่บ้านก็ได้", "teacher คนใหม่สอนสนุกมากเลย", "หนัง sequel ภาคสองจะเข้าโรงปีหน้านะ", "MacBook ของพี่ชายเบามากและแบตอึด", "CCTV โรงเรือนดูภาพชัดมากเลย", "ฝนตกหนักมาก สั่ง Grab ดีกว่านะ", "เปิด Classroom ดูซิ มีงานใหม่ไหม", "หนังเรื่องนี้เป็น remake จากเรื่องเก่าเมื่อนานมาแล้ว", "iOS เวอร์ชันใหม่มีฟีเจอร์เพียบ", "แม่คัดไข่ร้าวออกก่อนแพ็ก เสร็จแล้วถ่ายรูปลง IG ของฟาร์ม", "จอง table ไว้ให้แล้วนะ ไปถึงบอกชื่อได้เลย", "GPA ตกอีกแล้ว", "ใครดูหนัง Marvel เรื่องล่าสุดแล้วบ้าง", "ใช้ AirPods ฟังเพลงแล้วไม่ต้องมีสาย", "ติด label ไข่ตามเบอร์ใหญ่กลางเล็ก", "ร้านนี้ต้อง booking ล่วงหน้า ไม่งั้นไม่มีที่", "GPA เทอมนี้ขึ้นมานิดหน่อย ดีใจมากเลย", "ผมชอบ Studio Ghibli ทุกเรื่องเลย", "smartwatch เรือนนี้นับก้าวเดินได้ด้วย", "ไข่ล็อตนี้เปลือกบางไปหน่อย ลองหา vitamin ผสมน้ำให้ไก่ดู", "ถึงโรงแรมแล้ว เดี๋ยว check in ก่อนนะ", "Canva ล่มอีกแล้ว", "One Piece ตอนล่าสุดสนุกมาก ห้าม spoil นะ", "earbuds ข้างขวาหายไปไหนแล้วเนี่ย", "ลูกค้าจะมารับไข่ที่ฟาร์มตอนบ่าย ส่ง location ให้เขาหน่อย", "ทุกคน ready หรือยัง จะออกเดินทางแล้วนะ", "experiment เมื่อวานไม่ขึ้นสีตามที่ครูบอกอะ", "อย่าเพิ่ง spoil นะ", "ลง Linux ไว้ในเครื่องเก่าก็ลื่นดีนะ", "ขาย wholesale ให้แม่ค้าที่ตลาดทุกวัน", "ขอ confirm อีกทีว่าเจอกันกี่โมง", "ท่อง formula ฟิสิกส์ไม่ไหวแล้ว มีเยอะมาก", "เจอ spoil หนังในคอมเมนต์ โมโหมากเลย", "drone ตัวนี้ควบคุมผ่าน app ในมือถือ", "เช็กท่อน้ำให้ไก่ทุกเช้านะ ถ้ารั่วให้ video call มาบอกพ่อ", "ขอ cancel นัดวันนี้นะ ไม่สบายนิดหน่อย", "ถ้าสอบตกต้อง retake ใหม่ในเทอมหน้านะ", "ซื้อ popcorn กับน้ำใหญ่ ๆ นะ", "หุ่นยนต์ตัวนี้สั่งด้วยเสียงผ่าน Alexa", "สั่งถาดไข่ใหม่ใน Lazada ไว้แล้ว", "เปลี่ยน plan เป็นวันอาทิตย์ได้ไหม", "interview มหาลัยอาทิตย์หน้า ยังไม่รู้จะตอบอะไรเลย", "โรงหนังที่ห้างมีจอ IMAX ด้วยนะ", "จอ monitor อีกตัวต่อด้วยสาย HDMI", "บันทึกยอดขายไข่ลง Excel ทุกคืน", "อาทิตย์นี้ weekend ว่างทั้งสองวันเลย", "ทำ slide เสร็จยัง", "อย่าเพิ่งลุก มีฉาก post-credit ด้วยนะ", "port ด้านข้างเสียบอะไรได้บ้าง", "เมื่อวานแม่กดสั่งของใน Shopee ตั้งแต่เช้า แต่ตอนนี้ rider ก็ยังไม่โทรมาเลย ไม่รู้ว่าติดอะไรอยู่", "ปีใหม่นี้ไป trip เชียงใหม่กันไหม", "ตั้งใจจะอ่านหนังสือสอบ แต่เปิด TikTok แป๊บเดียวก็ผ่านไปชั่วโมงนึงแล้ว", "ตอนจบ twist มากเลย", "ได้เลยครับ เดี๋ยวส่ง file ให้นะ", "ฉันใส่ของลงตะกร้าไว้ตั้งนานแล้ว พอวันนี้มี voucher ลดเพิ่มก็เลยกดจ่ายเลย ดีใจมากเลยอะ", "พรุ่งนี้มีงานกลุ่มส่งครู เดี๋ยวทำใน Canva แล้วส่งลิงก์ไปนะ", "ใครจะ present ส่วนแรก", "อยากดูหนัง comedy ขำ ๆ ผ่อนคลายหน่อย ช่วงนี้เครียดเรื่องสอบมาก ใครมีเรื่องแนะนำบ้าง", "โอเคค่ะ เดี๋ยวหนูกด accept ให้", "ถ้าสั่ง LINE MAN ก่อนเที่ยงจะได้ส่วนลดค่าส่ง เดี๋ยวพี่สั่งให้ทั้งโต๊ะเลยนะ อยากกินอะไรก็บอกมา", "ใครทำ homework เสร็จแล้วบ้าง ขอดูหน่อย", "กดส่งใน Classroom ไปแล้ว แต่ขึ้นว่า late อะ", "สุดสัปดาห์นี้ขอ binge หนังอย่างเดียวเลย", "ไม่เป็นไรครับ ลอง login ใหม่อีกที", "ตอนแรกว่าจะไปกินชาบูที่ห้าง แต่คนเยอะมากเลยเปลี่ยนมาสั่ง delivery มากินที่บ้านดีกว่า", "ไอดอลของเราจะ comeback เดือนหน้า รอไม่ไหวแล้ว", "ครูส่ง link Google Meet มาแล้ว เข้ากันเลย", "หนังเรื่องนี้น่าจะได้ Oscar ปีนี้", "อะไรเนี่ย โปรแกรมขึ้นว่า not responding", "เสาร์นี้ครอบครัวเราจะไปกิน buffet ที่โรงแรมกัน พ่อบอกว่าจองโต๊ะไว้แล้ว ต้องไปให้ตรงเวลานะ", "ดู anime กันไหมเสาร์นี้", "วันศุกร์มี club ถ่ายภาพนะ ไปด้วยกันไหม", "ซีซันนี้ลงวันละ episode เดียว รอจนใจจะขาดเลย", "ใช่เลย ผมก็โดน logout ออกเองเหมือนกัน", "ขอ Americano เย็นหนึ่งแก้ว กับ latte ร้อนอีกหนึ่งแก้วค่ะ แล้วก็ขอหลอดกระดาษสองหลอดนะคะ", "ปีหน้าอยากไปงาน fan meet ของวงนี้", "แบ่ง topic ตามความถนัดดีไหม", "มาเล่น board game กัน", "เออจริง เมื่อวานลืม charge มือถือไว้", "เพื่อนชวนไปคาเฟ่ใหม่ที่ขายแต่ matcha กับขนมญี่ปุ่น ผมเลยรีบเก็บของแล้วออกจากบ้านเลย", "wow สวยมากเลยอะ แต่งหน้าเองเหรอ", "ส่งงานผ่าน Google Classroom ได้เลยนะคะ", "วันเสาร์นี้มาเล่น board game ที่บ้านผมไหม", "ขอบคุณมากนะ ช่วยตั้ง Wi-Fi ให้ทันเวลาพอดี", "ก่อนไปเที่ยวต้องทำ booking โรงแรมให้เรียบร้อย แล้วเช็กด้วยว่าห้องมี Wi-Fi ไหม", "OMG ลืมไปเลยว่าวันนี้มีนัด", "ใส่ voice over ในสไลด์ แล้วส่งเป็นคลิปแทนการพูดสดก็ได้", "ผมชอบ board game แนววางแผนมากกว่าแนวสุ่ม", "ไม่ได้ครับ ต้อง restart ก่อนถึงจะใช้ได้", "พอถึงโรงแรมก็ไป check-in ที่เคาน์เตอร์ แต่พนักงานบอกว่าห้องยังไม่ว่าง ต้องรอถึงบ่ายสองโมง", "nice นะ ตัดต่อได้เนียนมาก", "deadline คือคืนนี้ห้าทุ่มนะ รีบหน่อย", "เสาร์อาทิตย์ที่แล้วผมกับเพื่อนนั่งเล่น board game กันสี่ชั่วโมงติด จนแม่ต้องมาเรียกไปกินข้าวสามรอบ", "เมื่อกี้ลอง sync ข้อมูลแล้ว ยังไม่ขึ้นเลย", "ไปทำงานทุกวันนั่ง BTS ตอนเช้า คนแน่นมากจนยืนเบียดกัน เลยอยากเปลี่ยนไปนั่ง MRT แทน", "เรื่องนี้ relate มากเลย ตรงกับชีวิตเรามาก", "ครูบอกว่าถ้าอยากยื่น TCAS รอบพอร์ต ต้องเริ่มเตรียมผลงานตั้งแต่ตอนนี้ เพราะต้องใช้เวลาทำนานมาก", "เล่น Uno กันไหม ผมแจกการ์ดเอง", "ว่าไงจ๊ะ ได้รับ attachment ที่ส่งไปไหม", "ถ้าฝนตกแบบนี้ไม่ต้องรอ taxi แล้ว เปิดแอปเรียก Grab ง่ายกว่า คนขับจะมารับหน้าห้างเลย", "thanks ที่มาร่วมงานนะ", "ลืมเอา iPad มา ใช้ของเพื่อนได้ไหม", "Monopoly เกมนี้เล่นทีไรก็ทะเลาะกันทุกที", "เมื่อคืนผมนั่งทำรายงานใน Word จนดึก แต่ไฟดับก่อนกด save เลยหายหมดทั้งไฟล์", "หมอบอกว่าต้องออกกำลังกายสัปดาห์ละสามวัน ผมเลยสมัคร gym ใกล้บ้าน แล้วเริ่ม workout ตั้งแต่เมื่อวาน", "please ช่วยตอบเราหน่อยนะ รอมาตั้งนานแล้ว", "exam วิชาประวัติศาสตร์ช่วงเช้า ง่วงมากเลย", "Jenga ตึกล้มอีกแล้ว ใครดึงอะ", "แม่ครับ ช่วยดูหน่อยว่าทำไมมือถือเครื่องนี้ถึงไม่ยอมเชื่อมต่อ Wi-Fi ทั้งที่ใส่รหัสถูกแล้ว", "ช่วงนี้ฉันคุม diet อย่างจริงจัง ตื่นมาก็ดื่ม protein ก่อนไปวิ่ง กลางวันกินสลัดกับอกไก่ต้ม", "เพื่อนแอบ crush ใครสักคนอยู่ แต่ไม่ยอมบอก", "ภาพ lag มากเลย เน็ตของใครช้าอะ", "ใครทอย dice ได้หกแต้ม ได้เดินก่อนเลย", "ถ้าอยากให้ AI ตอบได้ดี ต้องเขียน prompt ให้ชัดเจนและบอกด้วยว่าอยากได้คำตอบแบบไหน", "เมื่อคืนมีไข้สูงมาก เช้านี้เลยโทรไปจองคิวที่ clinic ใกล้บ้าน คุณหมอนัดเวลาสิบโมงครึ่ง", "squad เราสนิทกันมากเลย ไปไหนไปด้วยกันตลอด", "ตั้ง reminder ในมือถือ กันลืมส่งงาน", "ลองเล่น Catan แล้วติดใจมากเลยครับ", "ตอนแรกผมใช้ Windows มาตลอด แต่พอลองเครื่อง Mac แล้วก็ติดใจเลยครับ", "ฉันมี appointment กับคุณหมอฟันวันพุธ แต่หัวหน้าเรียกประชุมพอดี เลยต้องขอเลื่อนไปวันศุกร์", "bestie เรามาถึงแล้ว รอตรงนี้นะ", "Wi-Fi หลุดอีกแล้ว", "ผมซื้อ card game ใหม่มาสองกล่อง", "วันนี้ครูให้ส่งงานใน Classroom แล้วต้องแนบ PDF ด้วย ใครยังไม่ส่งรีบนะ", "พรุ่งนี้มี meeting กับลูกค้าตั้งแต่เก้าโมง แต่ report ยังไม่เสร็จเลย คืนนี้คงต้องทำ OT", "เมื่อวานแม่ถ่าย video ตอนเราเต้นที่บ้านแล้วเอาไปลง Facebook ไม่บอกเราก่อนเลย อายมากแต่คนกด like เยอะเหมือนกัน", "font นี้อ่านยากอะ เปลี่ยนดีกว่า", "ชุด cosplay สวยจังเลย", "ฉันกำลังเขียน code ด้วย Python อยู่ แต่มันขึ้นว่า error ไม่รู้จะแก้ตรงไหนดี", "หัวหน้าบอกว่า deadline คือวันศุกร์ แต่ลูกค้าอยากได้ตั้งแต่วันพุธ ทีมเลยต้องช่วยกันเร่งงานทั้งอาทิตย์", "เลิกเรียนแล้วเดี๋ยวเจอกันที่ cafe หน้าโรงเรียนนะ ถ้าใครมาถึงก่อนก็ส่ง location ให้เพื่อนด้วย", "app ของโรงเรียนใช้ยากมาก กดอะไรก็ค้าง", "งาน cosplay ที่ห้างปีนี้คนเยอะมาก", "เมื่อกี้ต้นส่ง link ผิดในกลุ่ม เลยต้องรีบกด delete ก่อนที่ครูจะเห็น", "ส่ง email ขอบคุณลูกค้าให้ด้วยนะครับ แล้วอย่าลืมแนบ file ใบเสนอราคาไปด้วย ผมกลัวลืม", "ปู่โทรมาถามว่าทำไมเข้า YouTube ไม่ได้ เราเลยสอนให้ปิดแล้วเปิด Wi-Fi ใหม่ทางโทรศัพท์", "ช่วง break สามสิบนาที กินข้าวทันไหมนะ", "ผมช่วยพี่สาวเย็บชุด cosplay ตัวละครในเกม ใช้เวลาตั้งสามอาทิตย์เลยนะ", "เครื่องคอมที่บ้านเก่ามาก เปิดทีต้องรอเป็นสิบนาที เลยคิดว่าจะลองเปลี่ยนมาใช้ SSD ดู", "เมื่อเช้าฝนตกหนัก ไก่ในเล้ากินอาหารน้อยลง พ่อกลัวไข่จะลด เลยให้จดไว้ใน note มือถือทุกวัน", "ตอนแรกว่าจะไม่ไปงานเลี้ยงรุ่นแล้ว แต่เห็นเพื่อนลง story ว่าสนุกมาก เลยตัดสินใจไปดีกว่า", "ครูให้ homework ทุกวัน นอนไม่พอเลยอะ", "อยากแต่ง cosplay ไปงานโรงเรียนแต่ครูจะให้ไหมนะ", "พ่อบอกว่าถ้าจะซื้อมือถือใหม่ ให้ดูที่ battery กับกล้องก่อน ราคาค่อยว่ากันทีหลัง", "ลูกค้าประจำโทรมาขอไข่เพิ่ม แต่ stock เหลือไม่มาก ถ้ารับ order ใหญ่ต้องรอไก่ออกไข่อีกสองวัน", "ถ้าพรุ่งนี้ฝนไม่ตก เราจะไปปั่นจักรยานที่สวนกัน เดี๋ยวคืนนี้ค่อย update ในกลุ่ม LINE อีกทีนะ", "ทำ Google Form ส่งแบบประเมินด้วยนะ", "ไปงาน convention ที่ไบเทคมา ของเยอะมากเลย", "ตอนนี้เสียงเบามาก ลองเช็ก mic กับ setting ใน Zoom ให้หน่อยได้ไหมคะ", "แม่ให้จัดไข่เป็น set ละสามแผง แล้วติด label ชื่อร้านด้วย เสร็จแล้วค่อยขนขึ้นรถไปส่ง", "เพื่อนสนิทเพิ่งกลับมาจากญี่ปุ่น ส่ง photo มาให้ดูเต็มเลย แต่ยังไม่ได้ลง Instagram ให้ใคร", "ครูให้เรียน online สัปดาห์หน้า เพราะน้ำท่วม", "ซื้อ figure ตัวละครโปรดมาตั้งโชว์", "ตอนนี้ผมพูดให้มือถือพิมพ์ตามด้วย voice typing เลยไม่ต้องใช้นิ้วเลย", "วันนี้ไปส่งไข่ร้านค้าแถวตลาดเสร็จแล้ว ขากลับแวะ 7-Eleven ซื้อกาแฟกับขนมปังมากินกันนะ", "ผมเปิดกล้องหน้าไว้ตอน video call แต่ลืมว่าแม่เดินผ่านข้างหลัง ทุกคนในห้องขำกันใหญ่เลย", "field trip ปีนี้ไปเขาใหญ่ เตรียมเสื้อกันหนาวด้วยนะ", "เพื่อนผมสะสม poster หนังเก่าเต็มห้อง", "ถ้า voice typing พิมพ์ผิดก็แก้ทีหลังได้นะ", "ใครได้ cashback ที่ Lazada บ้าง ผมกดรับ code ไว้แล้ว แต่ตอนจ่ายเงินมันไม่ลดเลย", "คุณน้าบ่นว่าเล่น Facebook แล้วเจอแต่ ads ขายของ ไม่ค่อยเจอรูปหลานเลย", "ขอ PDF ของรายงานเล่มสุดท้ายหน่อยครับ", "วันเกิดนี้จัด party เล็ก ๆ ที่บ้านนะ ชวนเพื่อนมาเล่นเกมด้วย", "พูดช้าลงหน่อยและพูดให้ชัด แล้ว mic จะจับเสียงได้ดีขึ้นนะคะ", "ร้านนี้ pizza หน้าไหนอร่อยสุดคะ พี่ว่าจะสั่งหน้าชีสสองถาดไปกินกับน้อง ๆ ที่บ้านนะ", "ช่วยบอกทุกคนในกลุ่มด้วยนะว่าพรุ่งนี้ต้องใส่ชุดพละ เมื่อกี้ครูเพิ่งส่งมาใน inbox", "คาบ math เช้านี้ครูสอนเรื่องฟังก์ชัน ฉันก็ยังงงอยู่", "ไปเล่น escape room กันไหม ได้ยินว่าสนุกมาก", "ลองพูดสั่งเปิด Bluetooth ผ่าน voice assistant ดูสิ", "ขอเปลี่ยน menu จากไก่ทอดเป็นปลาทอดแทนได้ไหมครับ เพราะผมไม่ค่อยกินเนื้อไก่ช่วงนี้", "อัดคลิปเต้นไปสิบรอบแล้วยังไม่ถูกใจเลย สงสัยต้องซ้อมอีกหน่อยก่อนลง TikTok", "Instagram ของชมรมมีรูปกีฬาสีเยอะมาก", "ไปห้างเล่น arcade ตู้เกมกันไหม", "เขียน email ยาวก็ใช้ voice typing พูดเอาง่ายกว่าเยอะ", "ร้านบอกว่าถ้าจ่ายผ่าน PromptPay จะลดให้อีกยี่สิบบาท แม่เลยให้ผมสแกน QR ตรงเคาน์เตอร์เลย", "พี่สาวบอกว่าถ้าอยากได้ follower เยอะ ต้องลงคลิปทุกวัน แต่เราว่าลงเฉพาะที่สนุกก็พอ", "ครูไม่ให้ใช้ ChatGPT ทำการบ้าน", "ลองใส่แว่น VR แล้วเวียนหัวมากเลย", "ขอให้ browser จำ account นี้ไว้ในเครื่องนะ", "ปีนี้บริษัทมี bonus ให้ทุกคน หัวหน้าเลยพาทีมไปกิน shabu ฉลองกันที่ร้านใกล้ office", "เมื่อกี้พิมพ์ผิดกลุ่มอะ ตั้งใจจะส่งให้เพื่อน ดันส่งให้ครู รีบ delete เลย", "ขอเลื่อน deadline ได้ไหมครับ พอดีเน็ตที่บ้านล่ม", "ไปเล่น bowling กับเพื่อนมา แพ้ตลอดเลย", "ถอด USB ออกก่อนปิดเครื่องด้วยนะ อย่าลืม", "ตอนนี้ฟาร์มสั่งอาหารไก่ผ่าน LINE กับคนส่งประจำ ถ้าจะให้มาถึงพรุ่งนี้ต้องโอนเงินก่อนเที่ยงนะ", "อยากชวนไปดู concert วันเสาร์หน้า ราคาตั๋วไม่แพง เดี๋ยวส่ง link ให้ดูนะ", "วันนี้ที่ห้อง lab ทำ experiment ตั้งแต่คาบสองถึงคาบสี่ ผลไม่ตรงทฤษฎีนิดหน่อย เลยต้องทำซ้ำอีกรอบ", "เสร็จจากสอบแล้วเรามาเล่นเกมกันให้เต็มที่ ทั้ง ROV ทั้ง Minecraft ไม่หลับไม่นอนเลย", "ทำไมวันนี้ internet ช้าจัง ใครโหลดอะไรอยู่", "สั่ง Grab Food มาส่งที่หอพักนะ", "พ่อชอบโพสต์รูปอาหารลง Facebook ทุกมื้อ ใคร ๆ ก็มา comment ว่าหิวตามกัน", "ถ้าไม่มั่นใจข้อไหน ให้ข้ามไปก่อน แล้วค่อยกลับมา review ตอนท้าย", "ถ้าวันนี้ฝนตกก็อยู่บ้านเปิด Netflix ดู series ก็ได้ หรือจะเล่น board game กับพี่น้องก็สนุก", "ไว้เย็นนี้เจอกันใน Discord นะ แล้วค่อยคุยเรื่องโปรเจกต์", "LINE MAN ร้านนี้ส่งช้ามากเลย รอเกือบชั่วโมงแล้ว", "คืนนี้ไม่ต้องรอเรานะ เดี๋ยวแม่ขับรถมารับหลังเลิกซ้อมสักสี่ทุ่ม ถึงบ้านแล้วจะ chat บอกอีกที", "ครูให้ bonus สองคะแนนสำหรับคนที่ส่งก่อนเวลา", "วันหยุดนี้จะนอนเล่นเกมทั้งวัน ปิด notification ให้หมดเลย", "เสร็จแล้วครับ ปิด laptop แล้วไปกินข้าวกัน", "เมื่อกี้เห็นใน TikTok ว่าร้านนี้ลดราคา แต่พอไปถึงจริงไม่มีโปรเลย"];
+const PER = 100, SETS = Math.ceil(DATA.length / PER), TAIL_MS = 350, MIN_MS = 700;
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(4, "0");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+// clips live in memory; IndexedDB keeps them across reloads when the browser allows it
+const clips = new Map();
+const idb = (() => {
+  let p = null;
+  const open = () => p || (p = new Promise((res, rej) => {
+    const r = indexedDB.open("tt-rec", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("clips");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const run = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction("clips", mode), req = fn(t.objectStore("clips"));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  }));
+  return {
+    put: (k, v) => run("readwrite", s => s.put(v, k)).catch(() => {}),
+    del: k => run("readwrite", s => s.delete(k)).catch(() => {}),
+    async load() {
+      try {
+        const keys = await run("readonly", s => s.getAllKeys()), vals = await run("readonly", s => s.getAll());
+        keys.forEach((k, i) => clips.set(k, vals[i]));
+      } catch (e) {}
+    }
+  };
+})();
+
+let cur = 0, pos = 0;
+const m = /^#set(\d+)$/.exec(location.hash);
+if (m && +m[1] >= 1 && +m[1] <= SETS) cur = +m[1] - 1; else cur = store.get("tt-set", 0) || 0;
+if (cur >= SETS) cur = 0;
+$("nick").value = store.get("tt-nick", "");
+$("consent").checked = !!store.get("tt-consent", false);
+$("nick").addEventListener("input", () => store.set("tt-nick", $("nick").value.trim()));
+$("consent").addEventListener("change", () => store.set("tt-consent", $("consent").checked));
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function hl(s) {
+  return s.split(/([A-Za-z0-9][A-Za-z0-9'’.&+-]*(?: [A-Za-z0-9][A-Za-z0-9'’.&+-]*)*)/)
+    .map((p, i) => i % 2 && /[A-Za-z]/.test(p) ? `<span class="en">${esc(p)}</span>` : esc(p)).join("");
+}
+function range(k) { const a = k * PER; return [a, Math.min(a + PER, DATA.length)]; }
+function note(t, err) { $("note").textContent = t; $("note").classList.toggle("err", !!err); }
+
+function renderChips() {
+  $("chips").innerHTML = Array.from({ length: SETS }, (_, k) => {
+    const [a, b] = range(k);
+    return `<button class="chip" type="button" data-k="${k}" aria-pressed="${k === cur}">ชุด ${k + 1}<span>${a + 1}–${b}</span></button>`;
+  }).join("");
+}
+function renderList() {
+  const [a, b] = range(cur);
+  let html = "";
+  for (let i = a; i < b; i++) {
+    const id = i + 1, d = clips.has(id);
+    html += `<li><div class="row${d ? " done" : ""}" role="button" tabindex="0" data-id="${id}" aria-label="ข้อ ${id}${d ? " อัดแล้ว" : ""}">
+      <span class="num">${pad(id)}</span><span class="txt">${hl(DATA[i])}</span><span class="tick" aria-hidden="true">✓</span></div></li>`;
+  }
+  $("list").innerHTML = html;
+  updateProgress();
+}
+function countSet() { const [a, b] = range(cur); let n = 0; for (let i = a + 1; i <= b; i++) if (clips.has(i)) n++; return n; }
+function updateProgress() {
+  const [a, b] = range(cur), n = countSet();
+  $("progress").textContent = `ชุด ${cur + 1} · อัดแล้ว ${n}/${b - a}`;
+  $("sendBtn").disabled = n === 0; $("saveBtn").disabled = n === 0;
+}
+function pick(k) {
+  cur = k; store.set("tt-set", k);
+  try { history.replaceState(null, "", location.pathname + location.search + "#set" + (k + 1)); } catch (e) {}
+  note(""); renderChips(); renderList();
+}
+$("chips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (c) pick(+c.dataset.k); });
+const openAt = id => { const [a] = range(cur); openBooth(id - 1 - a); };
+$("list").addEventListener("click", e => { const r = e.target.closest(".row"); if (r) openAt(+r.dataset.id); });
+$("list").addEventListener("keydown", e => {
+  const r = e.target.closest(".row");
+  if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openAt(+r.dataset.id); }
+});
+
+// ---- recording booth ----
+let stream = null, actx = null, analyser = null, rec = null, chunks = [], t0 = 0, tick = null, wake = null, player = null;
+const MIME = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"]
+  .find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+const ext = t => /webm/.test(t) ? ".webm" : /mp4|aac|m4a/.test(t) ? ".m4a" : /ogg/.test(t) ? ".ogg" : ".audio";
+
+function ready() {
+  if (!$("consent").checked) { note("ติ๊กช่องยินยอมก่อนเริ่มอัดนะครับ", true); $("consent").focus(); return false; }
+  if (!$("nick").value.trim()) { note("ใส่ชื่อเล่นก่อนเริ่มอัดนะครับ", true); $("nick").focus(); return false; }
+  return true;
+}
+async function getMic() {
+  if (stream) return true;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+    status("เบราว์เซอร์นี้อัดเสียงไม่ได้ ลองเปิดลิงก์ใน Chrome หรือ Safari", true); return false;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true, channelCount: 1 } });
+  } catch (e) {
+    status("ใช้ไมค์ไม่ได้ กดอนุญาตไมค์ให้เว็บนี้ หรือเปิดลิงก์ใน Chrome หรือ Safari", true); return false;
+  }
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = actx.createAnalyser(); analyser.fftSize = 512;
+    actx.createMediaStreamSource(stream).connect(analyser);
+  } catch (e) { analyser = null; }
+  return true;
+}
+function releaseMic() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; analyser = null;
+  if (actx) { actx.close().catch(() => {}); actx = null; }
+}
+function status(html, err) { const s = $("bStatus"); s.innerHTML = html; s.classList.toggle("live", !!err); }
+function curId() { return range(cur)[0] + pos + 1; }
+
+function showBooth() {
+  const [a, b] = range(cur), id = curId();
+  $("bNum").textContent = pad(id);
+  const t = $("bTxt"); t.innerHTML = hl(DATA[id - 1]); t.style.animation = "none"; void t.offsetWidth; t.style.animation = "";
+  const has = clips.get(id);
+  status(has ? `ข้อ ${pos + 1}/${b - a} · อัดแล้ว ${(has.ms / 1000).toFixed(1)} วินาที <button class="linkbtn" id="bPlay" type="button">ฟัง</button>`
+             : `ข้อ ${pos + 1}/${b - a} · กดปุ่มอัด แล้วอ่านประโยคนี้`);
+  $("bRec").textContent = has ? "อัดใหม่" : "อัด";
+  $("bPrev").disabled = pos === 0;
+  $("bNext").textContent = pos === b - a - 1 ? "จบชุด" : (has ? "ถัดไป" : "ข้าม");
+}
+async function openBooth(p) {
+  if (!ready()) return;
+  pos = Math.max(0, p); $("booth").hidden = false; showBooth(); $("bRec").focus();
+  try { wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; }
+}
+function closeBooth() {
+  if (rec) return;
+  $("booth").hidden = true; releaseMic();
+  if (player) { player.pause(); player = null; }
+  if (wake) { wake.release().catch(() => {}); wake = null; }
+  renderList();
+}
+$("startBtn").addEventListener("click", () => {
+  const [a, b] = range(cur); let p = 0;
+  for (let i = a; i < b; i++) if (!clips.has(i + 1)) { p = i - a; break; }
+  openBooth(p);
+});
+
+async function startRec() {
+  if (!(await getMic())) return;
+  if (actx && actx.state === "suspended") actx.resume().catch(() => {});
+  if (player) { player.pause(); player = null; }
+  chunks = [];
+  try { rec = MIME ? new MediaRecorder(stream, { mimeType: MIME }) : new MediaRecorder(stream); }
+  catch (e) { status("เริ่มอัดไม่ได้ ลองเปิดลิงก์ใน Chrome หรือ Safari", true); return; }
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.start(); t0 = performance.now();
+  $("bRec").textContent = "หยุด"; $("bRec").classList.add("stop");
+  $("bPrev").disabled = true; $("bNext").disabled = true; $("bClose").disabled = true;
+  const buf = new Uint8Array(analyser ? analyser.fftSize : 0);
+  const loop = () => {
+    if (!rec) return;
+    const sec = (performance.now() - t0) / 1000;
+    let lvl = 0;
+    if (analyser) { analyser.getByteTimeDomainData(buf); for (const v of buf) lvl = Math.max(lvl, Math.abs(v - 128)); }
+    status(`● กำลังอัด ${sec.toFixed(1)} วินาที <span class="meter"><i style="width:${Math.min(100, lvl / 0.9)}%"></i></span>`, true);
+    tick = requestAnimationFrame(loop);
+  };
+  loop();
+}
+function stopRec() {
+  const r = rec, id = curId();
+  $("bRec").disabled = true;
+  setTimeout(() => {
+    r.onstop = () => {
+      const ms = Math.round(performance.now() - t0);
+      cancelAnimationFrame(tick); rec = null;
+      $("bRec").disabled = false; $("bRec").classList.remove("stop");
+      $("bNext").disabled = false; $("bClose").disabled = false;
+      const type = (r.mimeType || MIME || "audio/webm").split(";")[0];
+      const blob = new Blob(chunks, { type });
+      if (ms < MIN_MS || !blob.size) { showBooth(); status("สั้นไป ลองกดอัดแล้วอ่านใหม่อีกครั้ง", true); return; }
+      const clip = { blob, type, ms, at: new Date().toISOString() };
+      clips.set(id, clip); idb.put(id, clip);
+      const [a, b] = range(cur);
+      if (pos < b - a - 1) { pos++; showBooth(); }
+      else { showBooth(); status(`จบชุดแล้ว อัดได้ ${countSet()}/${b - a} ข้อ กดปิด แล้วกด "ส่งไฟล์เสียง"`); }
+    };
+    r.stop();
+  }, TAIL_MS);
+}
+$("bRec").addEventListener("click", () => rec ? stopRec() : startRec());
+$("bPrev").addEventListener("click", () => { if (pos > 0 && !rec) { pos--; showBooth(); } });
+$("bNext").addEventListener("click", () => {
+  const [a, b] = range(cur);
+  if (rec) return;
+  if (pos < b - a - 1) { pos++; showBooth(); } else closeBooth();
+});
+$("bClose").addEventListener("click", closeBooth);
+$("bStatus").addEventListener("click", e => {
+  if (e.target.id !== "bPlay") return;
+  const c = clips.get(curId()); if (!c) return;
+  if (player) player.pause();
+  player = new Audio(URL.createObjectURL(c.blob)); player.play().catch(() => {});
+});
+document.addEventListener("keydown", e => {
+  if ($("booth").hidden || e.target.tagName === "INPUT") return;
+  if (e.key === " " && e.target.tagName !== "BUTTON") { e.preventDefault(); $("bRec").click(); }
+  else if (e.key === "ArrowRight" && !rec) $("bNext").click();
+  else if (e.key === "ArrowLeft" && !rec) $("bPrev").click();
+  else if (e.key === "Escape") $("bClose").click();
+});
+
+// ---- send: one zip of this set ----
+async function buildZip() {
+  if (!window.JSZip) { note("โหลดตัวรวมไฟล์ไม่ได้ ลองเชื่อมเน็ตแล้วรีเฟรชหน้านี้", true); return null; }
+  const [a, b] = range(cur), z = new JSZip(), nick = $("nick").value.trim() || "ไม่ระบุชื่อ", lines = [];
+  for (let id = a + 1; id <= b; id++) {
+    const c = clips.get(id); if (!c) continue;
+    z.file(pad(id) + ext(c.type), c.blob);
+    lines.push(`${pad(id)}${ext(c.type)}\t${(c.ms / 1000).toFixed(1)}s\t${DATA[id - 1]}`);
+  }
+  z.file("info.txt", `TokType อัดเสียง\nชุด: ${cur + 1} (ข้อ ${a + 1}-${b})\nชื่อเล่น: ${nick}\nยินยอมให้ใช้ฝึกและทดสอบ: ${$("consent").checked ? "ใช่" : "ไม่"}\nส่งเมื่อ: ${new Date().toISOString()}\nจำนวนไฟล์: ${lines.length}\n\n${lines.join("\n")}\n`);
+  const blob = await z.generateAsync({ type: "blob", compression: "STORE" });
+  const name = `toktype-ชุด${cur + 1}-${nick.replace(/[\\/:*?"<>|\s]+/g, "_")}.zip`;
+  return { blob, name, n: lines.length };
+}
+function download(blob, name) {
+  const url = URL.createObjectURL(blob), el = document.createElement("a");
+  el.href = url; el.download = name; document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+$("sendBtn").addEventListener("click", async () => {
+  const z = await buildZip(); if (!z) return;
+  const file = new File([z.blob], z.name, { type: "application/zip" });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: z.name }); note(`ส่ง ${z.n} ข้อแล้ว ขอบคุณมากครับ`); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  download(z.blob, z.name);
+  note(`บันทึกไฟล์ ${z.name} แล้ว (${z.n} ข้อ) เปิด LINE แล้วแนบไฟล์นี้ส่งได้เลย`);
+});
+$("saveBtn").addEventListener("click", async () => {
+  const z = await buildZip(); if (!z) return;
+  download(z.blob, z.name);
+  note(`บันทึกไฟล์ ${z.name} แล้ว (${z.n} ข้อ) เปิด LINE แล้วแนบไฟล์นี้ส่งได้เลย`);
+});
+$("wipeBtn").addEventListener("click", () => { $("wipeYes").hidden = false; $("wipeBtn").hidden = true; });
+$("wipeYes").addEventListener("click", () => {
+  const [a, b] = range(cur);
+  for (let id = a + 1; id <= b; id++) if (clips.has(id)) { clips.delete(id); idb.del(id); }
+  $("wipeYes").hidden = true; $("wipeBtn").hidden = false;
+  note(`ลบเสียงชุด ${cur + 1} ในเครื่องนี้แล้ว`); renderList();
+});
+
+window.addEventListener("hashchange", () => {
+  const h = /^#set(\d+)$/.exec(location.hash);
+  if (h && +h[1] >= 1 && +h[1] <= SETS && +h[1] - 1 !== cur && !rec) pick(+h[1] - 1);
+});
+renderChips(); renderList();
+idb.load().then(renderList);
+</script>
+</body>
+</html>
